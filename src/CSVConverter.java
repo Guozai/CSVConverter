@@ -8,14 +8,15 @@ public class CSVConverter {
         if (args[0] != null)
             csvFile = args[0];
         String eachline = "";
-        String cvsSpliter = "\\s+";
+        String cvsSpliter = "\\t";
 
         int count = 0;
         try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {
             while ((eachline = br.readLine()) != null) {
                 String[] splited = eachline.split(cvsSpliter);
                 for (String s : splited)
-                    System.out.print(s + ", ");
+                    System.out.print(s + ",");
+                System.out.println();
                 count++;
             }
             System.out.println(count);
