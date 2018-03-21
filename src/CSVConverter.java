@@ -14,9 +14,13 @@ public class CSVConverter {
         try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {
             while ((eachline = br.readLine()) != null) {
                 String[] splited = eachline.split(cvsSpliter);
-                for (String s : splited)
+                String s = "";
+                for (int i = 0; i < splited.length - 2; i++) {
+                    s = splited[i];
                     System.out.print(s + ",");
-                System.out.println();
+                }
+                s = splited[splited.length - 1];
+                System.out.println(s);
                 count++;
             }
             System.out.println(count);
