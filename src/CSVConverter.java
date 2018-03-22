@@ -118,7 +118,7 @@ public class CSVConverter {
                 out.println(dataset[i]);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
         }
     }
 
@@ -127,7 +127,7 @@ public class CSVConverter {
             out.println("reg_id,REGISTER_NAME");
             out.println(1 + "," + data);
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
         }
     }
 
