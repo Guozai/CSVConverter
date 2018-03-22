@@ -12,6 +12,20 @@ public class CSVConverter {
     private static String eachline = "";
     private static String cvsSpliter = "\\t";
 
+    public static void main(String[] args) {
+        long startTime = System.currentTimeMillis(); // timer for calculating program execution time
+
+        CSVtoCSV();
+        createCSVSingleString(registerName, "regName.csv");
+        createCSV(status, "status.csv", "status_id,BN_STATUS");
+        createCSV(states, "states.csv", "state_id,BN_STATE_OF_REG");
+
+
+        long stopTime = System.currentTimeMillis();
+        double elapsedTime = (stopTime - startTime) / 1000.0; // execution time of the program in seconds
+        System.out.println("execution time:          " + elapsedTime + " s");
+    }
+
     private static void CSVtoCSV() {
         // line counter
         int count = 0;
@@ -129,19 +143,5 @@ public class CSVConverter {
         } catch (IOException e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
         }
-    }
-
-    public static void main(String[] args) {
-        long startTime = System.currentTimeMillis(); // timer for calculating program execution time
-
-        CSVtoCSV();
-        createCSVSingleString(registerName, "regName.csv");
-        createCSV(status, "status.csv", "status_id,BN_STATUS");
-        createCSV(states, "states.csv", "state_id,BN_STATE_OF_REG");
-
-
-        long stopTime = System.currentTimeMillis();
-        double elapsedTime = (stopTime - startTime) / 1000.0; // execution time of the program in seconds
-        System.out.println("execution time:          " + elapsedTime + " s");
     }
 }
