@@ -4,8 +4,8 @@ import java.io.PrintWriter;
 import java.io.IOException;
 
 public class CSVConverter {
-    //private static String csvFile = "BUSINESS_NAMES_201803.csv";
-    private static String csvFile = "asic.csv";
+    private static String csvFile = "BUSINESS_NAMES_201803.csv";
+    //private static String csvFile = "asic.csv";
     private static String registerName = "BUSINESS NAMES";
     private static String[] status = new String[] {"Registered", "Deregistered"};
     private static String[] states = new String[] {"ACT", "NSW", "NT", "QLD", "SA", "TAS", "VIC", "WA"};
@@ -110,8 +110,9 @@ public class CSVConverter {
         }
     }
 
-    private static void createCSV(String[] dataset, String fileName) {
+    private static void createCSV(String[] dataset, String fileName, String header) {
         try (PrintWriter out = new PrintWriter(fileName)) {
+            out.println(header);
             for (int i = 0; i < dataset.length; i++) {
                 out.print((i+1) + ",");
                 out.println(dataset[i]);
@@ -123,7 +124,8 @@ public class CSVConverter {
 
     private static void createCSVSingleString(String data, String fileName) {
         try (PrintWriter out = new PrintWriter(fileName)) {
-                out.println(1 + "," + data);
+            out.println("reg_id,REGISTER_NAME");
+            out.println(1 + "," + data);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -134,8 +136,8 @@ public class CSVConverter {
 
         CSVtoCSV();
         createCSVSingleString(registerName, "regName.csv");
-        createCSV(status, "status.csv");
-        createCSV(states, "states.csv");
+        createCSV(status, "status.csv", "status_id,BN_STATUS");
+        createCSV(states, "states.csv", "state_id,BN_STATE_OF_REG");
 
 
         long stopTime = System.currentTimeMillis();
