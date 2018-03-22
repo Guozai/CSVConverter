@@ -102,11 +102,11 @@ public class CSVConverter {
                     }
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                System.err.println(e.getClass().getName() + ": " + e.getMessage());
             }
             System.out.println("source csv length:       " + count + " lines");
         } catch (IOException e){
-            e.printStackTrace();
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
         }
     }
 
