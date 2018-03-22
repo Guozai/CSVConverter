@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="Mongo:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/Mongo_jar</output-path>
+    <root id="archive" name="CSVConverter.jar">
+      <element id="module-output" name="CSVConverter" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/../mongo-java-driver-3.6.3.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>
