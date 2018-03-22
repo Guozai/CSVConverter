@@ -1,4 +1,3 @@
-import java.net.UnknownHostException;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
 import com.mongodb.MongoClient;

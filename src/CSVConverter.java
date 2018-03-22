@@ -5,6 +5,7 @@ import java.io.IOException;
 
 public class CSVConverter {
     public static void main(String[] args) {
+        long startTime = System.currentTimeMillis(); // timer for calculating program execution time
         String csvFile = "BUSINESS_NAMES_201803.csv";
         if (args[0] != null)
             csvFile = args[0];
@@ -36,7 +37,7 @@ public class CSVConverter {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-            System.out.println(count);
+            System.out.println("source csv length:       " + count + " lines");
         } catch (IOException e){
             e.printStackTrace();
         }
@@ -99,5 +100,9 @@ public class CSVConverter {
 //        } catch (IOException e){
 //            e.printStackTrace();
 //        }
+
+        long stopTime = System.currentTimeMillis();
+        double elapsedTime = (stopTime - startTime) / 1000.0;
+        System.out.println("execution time:          " + elapsedTime + " s");
     }
 }
