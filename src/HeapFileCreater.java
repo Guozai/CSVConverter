@@ -2,10 +2,11 @@ import java.io.*;
 
 public class HeapFileCreater {
     private int pos = 0; // position pointer
+    private String fileName;
     private String eachline = "";
     private String cvsSpliter = "\\t";
-    private final int PAGE_SIZE = 512;
-    private byte[] page = new byte[PAGE_SIZE];
+    private byte[] page;
+    private int pageSize;
     private byte[] bInt = new byte[4]; // integer must be 4 bytes
     private byte[] regName = new byte[20]; // REGISTER_NAME is limited to 20 bytes
     private byte[] bnName = new byte[80]; // BN_NAME
@@ -18,9 +19,23 @@ public class HeapFileCreater {
     private int countLine = 0; // line counter
     private int countPage = 0; // page counter
 
+    public void setPage(int pageSize) {
+        this.page = new byte[pageSize];
+    }
+
+    public void setPageSize(int pageSize) {
+        this.pageSize = pageSize;
+        setPage(pageSize);
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
+
     public void launch() {
+
         // read the source file
-        try (BufferedReader br = new BufferedReader(new FileReader("asic.csv"))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
             // skip header line but count header column number
             if ((eachline = br.readLine()) != null) {
                 // read one line, so counter + 1
@@ -105,14 +120,14 @@ public class HeapFileCreater {
         byte[] buffer = s.getBytes();
         // write the length using 1 byte in front of register name string
         byte[] lenStr = {(byte)s.length()};
-        if ((pos + lenStr.length) < PAGE_SIZE) {
+        if ((pos + lenStr.length) < pageSize) {
             System.arraycopy(lenStr, 0, page, pos, lenStr.length);
             pos += lenStr.length;
         }
         //ArrayCopy(lenStr, 0, page, pos);
         // ensure fixed length of 20 bytes
         System.arraycopy(buffer, 0, src, 0, buffer.length);
-        if ((pos + regName.length) < PAGE_SIZE) {
+        if ((pos + regName.length) < pageSize) {
             System.out.println(pos);
             System.arraycopy(regName, 0, page, pos, regName.length);
             pos += regName.length;
@@ -122,7 +137,7 @@ public class HeapFileCreater {
     }
 
     private void ArrayCopy (byte[] src, int srcPos, byte[] dest, int pos) {
-        if ((pos + src.length) < PAGE_SIZE) {
+        if ((pos + src.length) < pageSize) {
             System.arraycopy(src, srcPos, dest, pos, src.length);
             pos += src.length;
         }
