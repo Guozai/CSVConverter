@@ -24,12 +24,16 @@ public class CSVtoDerby {
     }
 
     private static void CSVtoDEL() {
+        int columnNum = 0;
         try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {
             try (PrintWriter out = new PrintWriter("bn.del")) {
-                // skip header line
-                eachline = br.readLine();
-                while ((eachline = br.readLine()) != null) {
+                // count header line column number, but do not write header line to output
+                if ((eachline = br.readLine()) != null) {
                     // split each tab-separated line into token array
+                    String[] splited = eachline.split(cvsSpliter);
+                    columnNum = splited.length;
+                }
+                while ((eachline = br.readLine()) != null) {
                     String[] splited = eachline.split(cvsSpliter);
                     // temporary variable to store tokens
                     String s = "";
@@ -91,16 +95,23 @@ public class CSVtoDerby {
                                     break;
                                 default:
                                     // unique elements are written to file unchanged
-                                    out.print(s);
+                                    out.print(addDoubleQuotesAround(s));
                                     break;
                             }
                         }
                         // put comma behind each token except the last one
-                        if (i < splited.length - 1)
+                        if (i < splited.length - 1) {
                             out.print(",");
-                        else
+                        }
+                        else {
+                            // must ensure each row have 9 elements (8 commas)
+                            if (splited.length < columnNum) {
+                                for (int j = splited.length; j < columnNum; j++)
+                                    out.print(",");
+                            }
                             // end of line
                             out.println();
+                        }
                     }
                 }
             } catch (IOException e) {
@@ -127,5 +138,13 @@ public class CSVtoDerby {
         }
 
         return ss;
+    }
+
+    private static String addDoubleQuotesAround(String s) {
+        // add double quotes around String s if s is not ""
+        if (s.length() > 0)
+            s = "\"" + s + "\"";
+
+        return s;
     }
 }
