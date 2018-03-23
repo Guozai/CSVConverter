@@ -62,9 +62,9 @@ public class HeapFileCreater {
                         switch(i) {
                             case 0: // REGISTER_NAME
                                 pos = saveElement(s, regName, page, pos);
-                                //System.out.println(pos);
                                 break;
                             case 1: // BN_NAME
+                                pos = saveElement(s, bnName, page, pos);
                                 break;
                             case 2:
                                 break;
@@ -120,26 +120,18 @@ public class HeapFileCreater {
         byte[] buffer = s.getBytes();
         // write the length using 1 byte in front of register name string
         byte[] lenStr = {(byte)s.length()};
-        if ((pos + lenStr.length) < pageSize) {
-            System.arraycopy(lenStr, 0, page, pos, lenStr.length);
-            pos += lenStr.length;
-        }
-        //ArrayCopy(lenStr, 0, page, pos);
+        pos = ArrayCopy(lenStr, 0, page, pos);
         // ensure fixed length of 20 bytes
         System.arraycopy(buffer, 0, src, 0, buffer.length);
-        if ((pos + regName.length) < pageSize) {
-            System.out.println(pos);
-            System.arraycopy(regName, 0, page, pos, regName.length);
-            pos += regName.length;
-        }
-        //ArrayCopy(src, 0, page, pos);
+        pos = ArrayCopy(src, 0, page, pos);
         return pos;
     }
 
-    private void ArrayCopy (byte[] src, int srcPos, byte[] dest, int pos) {
+    private int ArrayCopy (byte[] src, int srcPos, byte[] dest, int pos) {
         if ((pos + src.length) < pageSize) {
             System.arraycopy(src, srcPos, dest, pos, src.length);
             pos += src.length;
         }
+        return pos;
     }
 }
