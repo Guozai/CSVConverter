@@ -37,7 +37,7 @@ public class CSVtoDerby {
                         s = splited[i];
                         // change the date format to YYYY-MM-DD
                         if (s.contains("/")) {
-                            out.print(dateFormatter(s));
+                            out.print("\"" + dateFormatter(s) + "\"");
                         } else {
                             // remove repeated information that is consistent
                             int id;
