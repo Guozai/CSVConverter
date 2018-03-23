@@ -26,13 +26,13 @@ public class CSVtoDerby {
     private static void CSVtoDEL() {
         int columnNum = 0;
         try (BufferedReader br = new BufferedReader(new FileReader(csvFile))) {
+            // count header line column number, but do not write header line to output
+            if ((eachline = br.readLine()) != null) {
+                // split each tab-separated line into token array
+                String[] splited = eachline.split(cvsSpliter);
+                columnNum = splited.length;
+            }
             try (PrintWriter out = new PrintWriter("bn.del")) {
-                // count header line column number, but do not write header line to output
-                if ((eachline = br.readLine()) != null) {
-                    // split each tab-separated line into token array
-                    String[] splited = eachline.split(cvsSpliter);
-                    columnNum = splited.length;
-                }
                 while ((eachline = br.readLine()) != null) {
                     String[] splited = eachline.split(cvsSpliter);
                     // temporary variable to store tokens
