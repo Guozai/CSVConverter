@@ -4,8 +4,8 @@ import java.io.PrintWriter;
 import java.io.IOException;
 
 public class CSVConverter {
-    private static String csvFile = "BUSINESS_NAMES_201803.csv";
-    //private static String csvFile = "asic.csv";
+    //private static String csvFile = "BUSINESS_NAMES_201803.csv";
+    private static String csvFile = "asic.csv";
     private static String registerName = "BUSINESS NAMES";
     private static String[] status = new String[] {"Registered", "Deregistered"};
     private static String[] states = new String[] {"ACT", "NSW", "NT", "QLD", "SA", "TAS", "VIC", "WA"};
@@ -45,13 +45,8 @@ public class CSVConverter {
                         if (count == 1) {
                             // write to fire changing tab to comma
                             out.print(s);
-                            // put comma behind each token except the last one
-                            if (i < splited.length - 1)
-                                out.print(",");
-                            else
-                                // end of line
-                                out.println();
                         } else {
+                            // remove repeated information that is consistent
                             int id;
                             switch (s) {
                                 // column REGISTER_NAME type 1
@@ -102,17 +97,17 @@ public class CSVConverter {
                                     out.print(id);
                                     break;
                                 default:
-                                    // write to fire changing tab to comma
+                                    // unique elements are written to file unchanged
                                     out.print(s);
                                     break;
                             }
-                            // put comma behind each token except the last one
-                            if (i < splited.length - 1)
-                                out.print(",");
-                            else
-                                // end of line
-                                out.println();
                         }
+                        // put comma behind each token except the last one
+                        if (i < splited.length - 1)
+                            out.print(",");
+                        else
+                            // end of line
+                            out.println();
                     }
                 }
             } catch (IOException e) {
