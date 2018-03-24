@@ -1,7 +1,10 @@
 public class dbload {
     private static int pageSize = 4096;
+    //private static String fileName = "BUSINESS_NAMES_201803.csv";
     private static String fileName = "asic.csv";
     public static void main(String[] args) {
+        long startTime = System.currentTimeMillis(); // timer for calculating program execution time
+
 //        try {
 //            if (args.length == 3) {
 //                if (args[0].equals("-p")) {
@@ -21,10 +24,14 @@ public class dbload {
 
         HeapFileCreater heapFileCreater = new HeapFileCreater();
         heapFileCreater.setPageSize(pageSize);
-        heapFileCreater.setFileName(fileName);
+        heapFileCreater.setFileIn(fileName);
         heapFileCreater.launch();
 
 //        btest test = new btest();
 //        test.launch();
+
+        long stopTime = System.currentTimeMillis();
+        double elapsedTime = (stopTime - startTime) / 1000.0; // execution time of the program in seconds
+        System.out.println("Execution time:           " + elapsedTime + " seconds");
     }
 }

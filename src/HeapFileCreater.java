@@ -10,7 +10,7 @@ public class HeapFileCreater {
     private final int STATE_SIZE = 3;
     private final int ABN_SIZE = 11;
 
-    private String fileName;
+    private String fileIn;
     private String eachline = "";
     private String cvsSpliter = "\\t";
     private byte[] page;
@@ -27,7 +27,7 @@ public class HeapFileCreater {
     public void launch() {
 
         // read the source file
-        try (BufferedReader br = new BufferedReader(new FileReader(fileName))) {
+        try (BufferedReader br = new BufferedReader(new FileReader(fileIn))) {
             // skip header line but count header column number
             if ((eachline = br.readLine()) != null) {
                 // split each tab-separated line into token array
@@ -36,7 +36,7 @@ public class HeapFileCreater {
                 columnNum = splited.length;
             }
 
-            File file = new File("heap.dat");
+            File file = new File("heap." + Integer.toString(pageSize));
             try (DataOutputStream os = new DataOutputStream(new FileOutputStream(file))) {
                 // if file doesn't exist, then create it
                 if (!file.exists())
@@ -138,7 +138,7 @@ public class HeapFileCreater {
                 }
             }
             // put comma at the end of each line
-            if (pcol == splited.length) {
+            if (pcol == columnNum) {
                 byte[] lenStr = ",".getBytes();
                 ArrayCopy(lenStr, 0, page);
                 if (!isPageFull)
@@ -228,7 +228,7 @@ public class HeapFileCreater {
         setPage(pageSize);
     }
 
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
+    public void setFileIn(String fileIn) {
+        this.fileIn = fileIn;
     }
 }
