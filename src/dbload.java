@@ -11,5 +11,8 @@ public class dbload {
         heapFileCreater.setPageSize(pageSize);
         heapFileCreater.setFileName(fileName);
         heapFileCreater.launch();
+
+//        btest test = new btest();
+//        test.launch();
     }
 }
