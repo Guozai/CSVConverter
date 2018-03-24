@@ -4,13 +4,15 @@ import java.io.PrintWriter;
 import java.io.IOException;
 
 public class CountMaxWidth {
-    //private static String csvFile = "BUSINESS_NAMES_201803.csv";
-    private static String csvFile = "asic.csv";
+    private static String csvFile = "BUSINESS_NAMES_201803.csv";
+    //private static String csvFile = "asic.csv";
     private static String registerName = "BUSINESS NAMES";
     private static String[] status = new String[] {"Registered", "Deregistered"};
     private static String[] states = new String[] {"ACT", "NSW", "NT", "QLD", "SA", "TAS", "VIC", "WA"};
     private static String eachline = "";
     private static String cvsSpliter = "\\t";
+
+    private static int[] col = new int[9];
 
     public static void main(String[] args) {
         long startTime = System.currentTimeMillis(); // timer for calculating program execution time
@@ -43,9 +45,11 @@ public class CountMaxWidth {
                         s = splited[i];
                         // the first line (header line) will not be changed
                         if (count == 1) {
-                            // write to fire changing tab to comma
+                            // write to file changing tab to comma
                             out.print(s);
                         } else {
+                            col[i] = col[i] > s.length() ? col[i] : s.length();
+
                             // remove repeated information that is consistent
                             int id;
                             switch (s) {
@@ -117,6 +121,9 @@ public class CountMaxWidth {
         } catch (IOException e){
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
         }
+        for (int j = 0; j < 8; j++)
+            System.out.print(col[j] + ", ");
+        System.out.println(col[8]);
     }
 
     private static void createCSV(String[] dataset, String fileName, String header) {

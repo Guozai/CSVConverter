@@ -43,7 +43,7 @@ public class CSVConverter {
                         s = splited[i];
                         // the first line (header line) will not be changed
                         if (count == 1) {
-                            // write to fire changing tab to comma
+                            // write to file changing tab to comma
                             out.print(s);
                         } else {
                             // remove repeated information that is consistent
