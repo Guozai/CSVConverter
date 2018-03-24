@@ -4,7 +4,11 @@ import java.nio.ByteBuffer;
 public class HeapFileCreater {
     private final int BINT_SIZE = 4;
 
+    // pointers
     private int pos = 0; // position pointer
+    private int pcol = 0; // store at which column the page reaches the end
+    boolean isPageFull = false;
+
     private String fileName;
     private String eachline = "";
     private String cvsSpliter = "\\t";
@@ -22,19 +26,6 @@ public class HeapFileCreater {
     private int columnNum = 0; // store the number of columns
     private int countLine = 0; // line counter
     private int countPage = 0; // page counter
-
-    public void setPage(int pageSize) {
-        this.page = new byte[pageSize];
-    }
-
-    public void setPageSize(int pageSize) {
-        this.pageSize = pageSize;
-        setPage(pageSize);
-    }
-
-    public void setFileName(String fileName) {
-        this.fileName = fileName;
-    }
 
     public void launch() {
 
@@ -61,47 +52,59 @@ public class HeapFileCreater {
                     String[] splited = eachline.split(cvsSpliter);
                     // temporary variable to store tokens
                     String s = "";
-                    for (int i = 0; i < splited.length; i++) {
-                        s = splited[i];
-                        switch(i) {
-                            case 0: // REGISTER_NAME
-                                pos = saveString(s, regName, pos);
-                                break;
-                            case 1: // BN_NAME
-                                pos = saveString(s, bnName, pos);
-                                break;
-                            case 2: // BN_STATUS
-                                pos = saveString(s, bnStatus, pos);
-                                break;
-                            case 3: // BN_REG_DT
 
-                                break;
-                            case 4:
-                                break;
-                            case 5:
-                                break;
-                            case 6:
-                                break;
-                            case 7:
-                                break;
-                            case 8:
-                                break;
-                            default:
-                                break;
+                    if (!isPageFull) {
+                        for (int i = 0; i < splited.length; i++) {
+                            s = splited[i];
+                            switch (i) {
+                                case 0: // REGISTER_NAME
+                                    saveString(s, regName);
+                                    break;
+                                case 1: // BN_NAME
+                                    saveString(s, bnName);
+                                    break;
+                                case 2: // BN_STATUS
+                                    saveString(s, bnStatus);
+                                    break;
+                                case 3: // BN_REG_DT
+
+                                    break;
+                                case 4:
+                                    break;
+                                case 5:
+                                    break;
+                                case 6:
+                                    break;
+                                case 7:
+                                    break;
+                                case 8:
+                                    break;
+                                default:
+                                    break;
+                            }
+//                            // put comma behind each token except the last one
+//                            if (i < splited.length - 1) {
+//                                out.print(",");
+//                            }
+//                            else {
+//                                // must ensure each row have 9 elements (8 commas)
+//                                if (splited.length < columnNum) {
+//                                    for (int j = splited.length; j < columnNum; j++)
+//                                        out.print(",");
+//                            }
+//                            // end of line
+//                            out.println();
                         }
-    //                        // put comma behind each token except the last one
-    //                        if (i < splited.length - 1) {
-    //                            out.print(",");
-    //                        }
-    //                        else {
-    //                            // must ensure each row have 9 elements (8 commas)
-    //                            if (splited.length < columnNum) {
-    //                                for (int j = splited.length; j < columnNum; j++)
-    //                                    out.print(",");
-    //                            }
-    //                            // end of line
-    //                            out.println();
-    //                        }
+                    } else { // page full
+                        os.write(page);
+                        os.flush();
+
+                        isPageFull = false; // reset the flag
+
+                        for (int j = pcol; j < splited.length; j++) {
+                            s = splited[j];
+                        }
+                        pcol = 0;
                     }
                 }
 
@@ -121,24 +124,27 @@ public class HeapFileCreater {
         }
     }
 
-    private int saveString (String s, byte[] src, int pos) {
+    private void saveString (String s, byte[] src) {
         // get the content in bytes
         byte[] buffer = s.getBytes();
         // write the length using 1 byte in front of register name string
         byte[] lenStr = {(byte)s.length()};
-        pos = ArrayCopy(lenStr, 0, page, pos);
+        ArrayCopy(lenStr, 0, page);
         // ensure fixed length of 20 bytes
         System.arraycopy(buffer, 0, src, 0, buffer.length);
-        pos = ArrayCopy(src, 0, page, pos);
-        return pos;
+        ArrayCopy(src, 0, page);
+
+        if (!isPageFull)
+            pcol++;
     }
 
-    private int ArrayCopy (byte[] src, int srcPos, byte[] dest, int pos) {
+    private void ArrayCopy (byte[] src, int srcPos, byte[] dest) {
         if ((pos + src.length) < pageSize) {
             System.arraycopy(src, srcPos, dest, pos, src.length);
             pos += src.length;
+        } else {
+            isPageFull = true;
         }
-        return pos;
     }
 
     private int saveDate (String s, byte[] src, int pos) {
@@ -165,7 +171,24 @@ public class HeapFileCreater {
         return pos;
     }
 
-    private int saveDateParts(String part, int pointer) {
-        return pointer;
+    public void setPage(int pageSize) {
+        this.page = new byte[pageSize];
+    }
+
+    public void setPageSize(int pageSize) {
+        this.pageSize = pageSize;
+        setPage(pageSize);
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
+    }
+
+    public void setPos(int pos) {
+        this.pos = pos;
+    }
+
+    public void setpCol(int pcol) {
+        this.pcol = pcol;
     }
 }
