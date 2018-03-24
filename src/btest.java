@@ -1,11 +1,12 @@
 import java.io.*;
+import java.nio.ByteBuffer;
 
 public class btest {
     public static void main(String[] args) {
         File file = new File("test.dat");
         String eachline = "";
         String cvsSpliter = "\\t";
-        byte[] page = new byte[16];
+        byte[] page = new byte[64];
         byte[] regName = new byte[20]; //
         int columnNum = 0; // store the number of columns
 
@@ -37,8 +38,13 @@ public class btest {
 
                     System.arraycopy(buffer, 0, regName, 3, buffer.length);
 
-                    byte[] lenStr = {(byte)14};
-                    System.arraycopy(lenStr, 0, page, 1, lenStr.length);
+//                    byte[] lenStr = ByteBuffer.allocate(4).putInt(2015).array();
+//                    System.arraycopy(lenStr, 0, page, 0, lenStr.length);
+                    byte[] aString = "abcdef".getBytes();
+                    byte[] lenStr = ByteBuffer.allocate(8).put(aString, 1, 5).array();
+                    System.arraycopy(lenStr, 0, page, 0, lenStr.length);
+                    byte[] lenStr1 = ByteBuffer.allocate(8).put(aString, 0, 6).array();
+                    System.arraycopy(lenStr1, 0, page, 8, lenStr1.length);
                     os.write(page);
                     System.out.println(os.size() + " bytes were written.");
 

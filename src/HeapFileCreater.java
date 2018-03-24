@@ -1,13 +1,17 @@
 import java.io.*;
+import java.nio.ByteBuffer;
 
 public class HeapFileCreater {
+    private final int BINT_SIZE = 4;
+
     private int pos = 0; // position pointer
     private String fileName;
     private String eachline = "";
     private String cvsSpliter = "\\t";
     private byte[] page;
     private int pageSize;
-    private byte[] bInt = new byte[4]; // integer must be 4 bytes
+    //private byte[] bInt = new byte[4]; // integer must be 4 bytes
+
     private byte[] regName = new byte[20]; // REGISTER_NAME is limited to 20 bytes
     private byte[] bnName = new byte[80]; // BN_NAME
     private byte[] bnStatus = new byte[15]; // BN_STATUS
@@ -76,9 +80,11 @@ public class HeapFileCreater {
                                     if (splitted.length == 3) {
                                         for(int k = 0; k < 3; k++) {
                                             int dpart = Integer.parseInt(splitted[k]);
-                                            byte[] bdate = {(byte)dpart};
-                                            System.arraycopy(bdate, 0, page, pos, bdate.length);
-                                            pos += bdate.length;
+                                            byte[] bdate = ByteBuffer.allocate(BINT_SIZE).putInt(dpart).array();
+                                            if ((pos + bdate.length) < pageSize) {
+                                                System.arraycopy(bdate, 0, page, pos, bdate.length);
+                                                pos += bdate.length;
+                                            }
                                         }
                                     } else { // date has more than 3 parts (DD MM YYYY and ?)
                                         return;
@@ -153,30 +159,10 @@ public class HeapFileCreater {
     }
 
     private int saveDate (String s, byte[] src, int pos) {
-        int pointer = 0;
-        // separate date into DD MM YYYY
-        try {
-            String[] splitted = s.split("/");
-            // if having DD MM YYYY, do formatting
-            if (splitted.length == 3) {
-                for(int i = 0; i < 3; i++)
-                    pointer = saveDateParts(splitted[i], pointer);
-                pos = ArrayCopy(src, 0, page, pos);
-                pos += src.length;
-            } else {
-                pos = -1;
-            }
-        } catch (ArrayIndexOutOfBoundsException e) {
-            System.err.println(e.getClass().getName() + ": " + e.getMessage());
-        }
         return pos;
     }
 
     private int saveDateParts(String part, int pointer) {
-        int dpart = Integer.parseInt(part);
-        byte[] bdate = {(byte)dpart};
-        System.arraycopy(bdate, 0, bInt, pointer, bdate.length);
-        pointer += bdate.length;
         return pointer;
     }
 }
