@@ -11,7 +11,7 @@ public class HeapFileCreater {
     private byte[] regName = new byte[20]; // REGISTER_NAME is limited to 20 bytes
     private byte[] bnName = new byte[80]; // BN_NAME
     private byte[] bnStatus = new byte[15]; // BN_STATUS
-    private byte[] bnDate = new byte[10]; // BN_REG_DT BN_CANCEL_DT BN_RENEW_DT are all limited to 10 bytes
+    private byte[] bnDate = new byte[12]; // BN_REG_DT BN_CANCEL_DT BN_RENEW_DT are all limited to 10 bytes
     private byte[] bnStateNum = new byte[20]; // BN_STATE_NUM
     private  byte[] bnState = new byte[3]; // BN_STATE_OF_REG
     private byte[] bnABN = new byte[11]; // BN_ABN
@@ -61,14 +61,31 @@ public class HeapFileCreater {
                         s = splited[i];
                         switch(i) {
                             case 0: // REGISTER_NAME
-                                pos = saveElement(s, regName, page, pos);
+                                pos = saveString(s, regName, pos);
                                 break;
                             case 1: // BN_NAME
-                                pos = saveElement(s, bnName, page, pos);
+                                pos = saveString(s, bnName, pos);
                                 break;
-                            case 2:
+                            case 2: // BN_STATUS
+                                pos = saveString(s, bnStatus, pos);
                                 break;
-                            case 3:
+                            case 3: // BN_REG_DT
+                                try {
+                                    String[] splitted = s.split("/");
+                                    // if having DD MM YYYY, do formatting
+                                    if (splitted.length == 3) {
+                                        for(int k = 0; k < 3; k++) {
+                                            int dpart = Integer.parseInt(splitted[k]);
+                                            byte[] bdate = {(byte)dpart};
+                                            System.arraycopy(bdate, 0, page, pos, bdate.length);
+                                            pos += bdate.length;
+                                        }
+                                    } else { // date has more than 3 parts (DD MM YYYY and ?)
+                                        return;
+                                    }
+                                } catch (ArrayIndexOutOfBoundsException e) {
+                                    System.err.println(e.getClass().getName() + ": " + e.getMessage());
+                                }
                                 break;
                             case 4:
                                 break;
@@ -115,7 +132,7 @@ public class HeapFileCreater {
         }
     }
 
-    private int saveElement (String s, byte[] src, byte[] page, int pos) {
+    private int saveString (String s, byte[] src, int pos) {
         // get the content in bytes
         byte[] buffer = s.getBytes();
         // write the length using 1 byte in front of register name string
@@ -133,5 +150,33 @@ public class HeapFileCreater {
             pos += src.length;
         }
         return pos;
+    }
+
+    private int saveDate (String s, byte[] src, int pos) {
+        int pointer = 0;
+        // separate date into DD MM YYYY
+        try {
+            String[] splitted = s.split("/");
+            // if having DD MM YYYY, do formatting
+            if (splitted.length == 3) {
+                for(int i = 0; i < 3; i++)
+                    pointer = saveDateParts(splitted[i], pointer);
+                pos = ArrayCopy(src, 0, page, pos);
+                pos += src.length;
+            } else {
+                pos = -1;
+            }
+        } catch (ArrayIndexOutOfBoundsException e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+        }
+        return pos;
+    }
+
+    private int saveDateParts(String part, int pointer) {
+        int dpart = Integer.parseInt(part);
+        byte[] bdate = {(byte)dpart};
+        System.arraycopy(bdate, 0, bInt, pointer, bdate.length);
+        pointer += bdate.length;
+        return pointer;
     }
 }
