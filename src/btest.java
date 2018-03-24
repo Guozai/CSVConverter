@@ -1,9 +1,11 @@
 import java.io.*;
+import java.nio.ByteBuffer;
 
 public class btest {
+    final int pageSize = 32;
     String eachline = "";
     String cvsSpliter = "\\t";
-    byte[] page = new byte[1024];
+    byte[] page = new byte[pageSize];
     byte[] regName = new byte[20]; //
     int columnNum = 0; // store the number of columns
     int pos = 0;
@@ -24,19 +26,8 @@ public class btest {
                 if (!file.exists())
                     file.createNewFile();
 
-                while((eachline = br.readLine()) != null) {
-                    String[] splited = eachline.split(cvsSpliter);
-                    String s = "";
-                    for (int i = 0; i < splited.length; i++) {
-                        s = splited[i];
-                        if (s.length() == 0) {
-                            System.out.println("found empty.");
-                            // add FF as the length of this element
-                            byte[] lenStr = {(byte) -1};
-                            ArrayCopy(lenStr, 0, page);
-                        }
-                    }
-                }
+                fillPage(pos);
+                fillPageWithZero(pos);
                 os.write(page);
                 os.flush();
                 os.close();
@@ -52,5 +43,29 @@ public class btest {
     private void ArrayCopy (byte[] src, int srcPos, byte[] dest) {
         System.arraycopy(src, srcPos, dest, pos, src.length);
         pos += src.length;
+    }
+
+    private void fillPageWithZero (int pos) {
+        byte[] buffer = {(byte)0};
+        while (pos + buffer.length <= pageSize) {
+            try {
+                System.arraycopy(buffer, 0, page, pos, buffer.length);
+                pos += buffer.length;
+            } catch (ArrayIndexOutOfBoundsException e) {
+                System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            }
+        }
+    }
+
+    private void fillPage (int pos) {
+        byte[] buffer = ByteBuffer.allocate(4).putInt(-1).array();
+        while (pos + buffer.length <= pageSize) {
+            try {
+                System.arraycopy(buffer, 0, page, pos, buffer.length);
+                pos += buffer.length;
+            } catch (ArrayIndexOutOfBoundsException e) {
+                System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            }
+        }
     }
 }

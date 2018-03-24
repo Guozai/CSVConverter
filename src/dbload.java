@@ -1,5 +1,5 @@
 public class dbload {
-    private static int pageSize = 4096;
+    private static int pageSize = 512;
     private static String fileName = "asic.csv";
     public static void main(String[] args) {
 //        if (args[0] == "-p") {
