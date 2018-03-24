@@ -74,24 +74,7 @@ public class HeapFileCreater {
                                 pos = saveString(s, bnStatus, pos);
                                 break;
                             case 3: // BN_REG_DT
-                                try {
-                                    String[] splitted = s.split("/");
-                                    // if having DD MM YYYY, do formatting
-                                    if (splitted.length == 3) {
-                                        for(int k = 0; k < 3; k++) {
-                                            int dpart = Integer.parseInt(splitted[k]);
-                                            byte[] bdate = ByteBuffer.allocate(BINT_SIZE).putInt(dpart).array();
-                                            if ((pos + bdate.length) < pageSize) {
-                                                System.arraycopy(bdate, 0, page, pos, bdate.length);
-                                                pos += bdate.length;
-                                            }
-                                        }
-                                    } else { // date has more than 3 parts (DD MM YYYY and ?)
-                                        return;
-                                    }
-                                } catch (ArrayIndexOutOfBoundsException e) {
-                                    System.err.println(e.getClass().getName() + ": " + e.getMessage());
-                                }
+
                                 break;
                             case 4:
                                 break;
@@ -159,6 +142,26 @@ public class HeapFileCreater {
     }
 
     private int saveDate (String s, byte[] src, int pos) {
+        try {
+            String[] splitted = s.split("/");
+            // if having DD MM YYYY, do formatting
+            if (splitted.length == 3) {
+                for(int k = 0; k < 3; k++) {
+                    int dpart = Integer.parseInt(splitted[k]);
+                    byte[] bdate = ByteBuffer.allocate(BINT_SIZE).putInt(dpart).array();
+                    if ((pos + bdate.length) < pageSize) {
+                        System.arraycopy(bdate, 0, page, pos, bdate.length);
+                        pos += bdate.length;
+                    }
+                }
+            } else { // date has other delimiter or format
+                throw new Exception("Date is not in DD/MM/YYYY format.");
+            }
+        } catch (ArrayIndexOutOfBoundsException e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+        } catch (Exception e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+        }
         return pos;
     }
 
