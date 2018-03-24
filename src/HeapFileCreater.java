@@ -8,7 +8,7 @@ public class HeapFileCreater {
     private final int DATE_SIZE = 12;
     private final int STATE_NUM_SIZE = 20;
     private final int STATE_SIZE = 3;
-    private final int ABN_SIZE = 11;
+    private final int ABN_SIZE = 13;
 
     private String fileIn;
     private String eachline = "";
