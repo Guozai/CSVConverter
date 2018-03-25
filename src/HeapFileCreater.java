@@ -21,7 +21,7 @@ public class HeapFileCreater {
     private int pcol = 0; // store at which column the page reaches the end
     boolean isPageFull = false;
     private int columnNum = 0; // store the number of columns
-    private int countRecord = 0; // record counter
+    private int countRecord = -1; // record counter skips the header line
     private int countPage = 1; // page counter
 
     public HeapFileCreater(int pageSize, String fileIn) {
@@ -31,6 +31,14 @@ public class HeapFileCreater {
     }
 
     public void launch() {
+        // count the number of records
+        try (BufferedReader br = new BufferedReader(new FileReader(fileIn))) {
+            while ((eachline = br.readLine()) != null)
+                // read one record, so counter + 1
+                countRecord++;
+        }catch (IOException e){
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+        }
 
         // read the source file
         try (BufferedReader br = new BufferedReader(new FileReader(fileIn))) {
@@ -48,9 +56,15 @@ public class HeapFileCreater {
                 if (!file.exists())
                     file.createNewFile();
 
+                // save countRecord as the first entry of the binary file
+                try {
+                    byte[] numRec = ByteBuffer.allocate(INT_SIZE).putInt(countRecord).array();
+                    ArrayCopy(numRec, page);
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    System.err.println(e.getClass().getName() + ": " + e.getMessage());
+                }
+
                 while((eachline = br.readLine()) != null) {
-                    // read one record, so counter + 1
-                    countRecord++;
                     String[] splited = eachline.split(cvsSpliter);
 
                     if (!isPageFull)
@@ -72,9 +86,6 @@ public class HeapFileCreater {
                 if (countPage > 1)
                     fillPageWithZero(pos);
                 os.write(page);
-
-                System.out.println(os.size() + " bytes were written.");
-
                 os.flush();
                 os.close();
             }catch (IOException e) {
@@ -96,7 +107,7 @@ public class HeapFileCreater {
             if (s.length() == 0) {
                 // add FF as the length of this element
                 byte[] lenStr = {(byte) -1};
-                ArrayCopy(lenStr, 0, page);
+                ArrayCopy(lenStr, page);
                 if (!isPageFull) {
                     if (pcol < columnNum)
                         pcol++;
@@ -146,7 +157,7 @@ public class HeapFileCreater {
             // put comma at the end of each line
             if (pcol == columnNum) {
                 byte[] lenStr = ",".getBytes();
-                ArrayCopy(lenStr, 0, page);
+                ArrayCopy(lenStr, page);
                 if (!isPageFull)
                     pcol = 0;
             }
@@ -158,8 +169,8 @@ public class HeapFileCreater {
         byte[] buffer = s.getBytes();
         // write the length using 1 byte in front of register name string
         byte[] lenStr = {(byte)s.length()};
-        ArrayCopy(lenStr, 0, page);
-        ArrayCopy(buffer, 0, page);
+        ArrayCopy(lenStr, page);
+        ArrayCopy(buffer, page);
     }
 
     private void saveFixedString (String s, int size) {
@@ -167,16 +178,16 @@ public class HeapFileCreater {
         byte[] buffer = s.getBytes();
         // write the length using 1 byte in front of register name string
         byte[] lenStr = {(byte)s.length()};
-        ArrayCopy(lenStr, 0, page);
+        ArrayCopy(lenStr, page);
         // ensure fixed length of 20 bytes
         byte[] caster = new byte[size];
         System.arraycopy(buffer, 0, caster, 0, buffer.length);
-        ArrayCopy(caster, 0, page);
+        ArrayCopy(caster, page);
     }
 
-    private void ArrayCopy (byte[] src, int srcPos, byte[] dest) {
+    private void ArrayCopy (byte[] src, byte[] dest) {
         if ((pos + src.length) < pageSize) {
-            System.arraycopy(src, srcPos, dest, pos, src.length);
+            System.arraycopy(src, 0, dest, pos, src.length);
             pos += src.length;
         } else {
             isPageFull = true;

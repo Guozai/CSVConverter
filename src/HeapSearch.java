@@ -15,12 +15,18 @@ public class HeapSearch {
     public void launch() {
         // read the source file
         try (FileInputStream fileIn = new FileInputStream(new File("heap." + Integer.toString(pageSize)))) {
+            // create data input stream
             DataInputStream in = new DataInputStream(fileIn);
+            // count the available bytes form the input stream
+
+            System.out.println(in.available());
+            System.out.println(in.available()/pageSize);
+
             int lenStr = (int) in.readByte();
 //            System.out.println((int) in.readByte());
             pos += 1;
-//            //in.read(buf, pos, 1);
-            in.read(buf, pos, lenStr);
+//            in.read(buf, pos, lenStr);
+//            pos += lenStr;
 
             fileIn.close();
         } catch (FileNotFoundException e) {
