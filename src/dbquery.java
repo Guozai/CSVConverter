@@ -4,5 +4,8 @@ public class dbquery {
     public static void main(String[] args) {
         HeapSearch heapSearch = new HeapSearch(queryKey, pageSize);
         heapSearch.launch();
+
+//        rtest test = new rtest(queryKey, pageSize);
+//        test.launch();
     }
 }
