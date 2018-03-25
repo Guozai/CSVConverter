@@ -24,6 +24,12 @@ public class HeapFileCreater {
     private int countRecord = 0; // record counter
     private int countPage = 1; // page counter
 
+    public HeapFileCreater(int pageSize, String fileIn) {
+        this.pageSize = pageSize;
+        this.fileIn = fileIn;
+        this.page = new byte[pageSize];
+    }
+
     public void launch() {
 
         // read the source file
@@ -217,18 +223,5 @@ public class HeapFileCreater {
                 System.err.println(e.getClass().getName() + ": " + e.getMessage());
             }
         }
-    }
-
-    public void setPage(int pageSize) {
-        this.page = new byte[pageSize];
-    }
-
-    public void setPageSize(int pageSize) {
-        this.pageSize = pageSize;
-        setPage(pageSize);
-    }
-
-    public void setFileIn(String fileIn) {
-        this.fileIn = fileIn;
     }
 }

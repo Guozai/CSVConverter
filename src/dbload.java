@@ -1,6 +1,6 @@
 public class dbload {
-    private static int pageSize = 4096;
-    private static String fileName = "BUSINESS_NAMES_201803.csv";
+    private static int pageSize = 0;
+    private static String fileName = "";
     //private static String fileName = "asic.csv";
     public static void main(String[] args) {
         long startTime = System.currentTimeMillis(); // timer for calculating program execution time
@@ -13,6 +13,13 @@ public class dbload {
                 } else {
                     throw new Exception("First argument is not \"-p\"");
                 }
+
+                HeapFileCreater heapFileCreater = new HeapFileCreater(pageSize, fileName);
+                heapFileCreater.launch();
+
+//                btest test = new btest();
+//                test.launch();
+
             } else {
                 throw new Exception("Need 3 arguments: java dbload -p pagesize datafile");
             }
@@ -21,14 +28,6 @@ public class dbload {
         } catch (Exception e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
         }
-
-        HeapFileCreater heapFileCreater = new HeapFileCreater();
-        heapFileCreater.setPageSize(pageSize);
-        heapFileCreater.setFileIn(fileName);
-        heapFileCreater.launch();
-
-//        btest test = new btest();
-//        test.launch();
 
         long stopTime = System.currentTimeMillis();
         double elapsedTime = (stopTime - startTime) / 1000.0; // execution time of the program in seconds
