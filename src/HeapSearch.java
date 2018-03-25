@@ -5,14 +5,23 @@ import java.nio.channels.FileChannel;
 
 public class HeapSearch {
     private final int INT_SIZE = 4;
-    private final int HEADER_SIZE = 1; // each element has a 1 byte header saving the length of the element
+    private final int LEN_STR_SIZE = 1; // each element has a 1 byte header saving the length of the element
     private final int REG_NAME_SIZE = 20;
+    private final int STATUS_SIZE = 15;
+    private final int DATE_SIZE = 12;
+    private final int STATE_NUM_SIZE = 20;
+    private final int STATE_SIZE = 3;
+    private final int ABN_SIZE = 13;
     private String queryKey;
     private int pageSize;
+    private int lenStr = 0;
 
     private int pos = 0; // position pointer
     private int numRec = 0; // number of records in the file
     private int numPage = 0;
+    // count of record searched; the first record is not in the while loop
+    // so the count is initialized as 1 instead of 0
+    private int count = 1;
 
     public HeapSearch (String queryKey, int pageSize) {
         this.queryKey = queryKey;
@@ -20,7 +29,6 @@ public class HeapSearch {
     }
 
     public void launch() {
-        int lenStr = 0;
 
         // read the source file
         //try (FileInputStream fis = new FileInputStream(new File("heap." + Integer.toString(pageSize)))) {
@@ -43,60 +51,146 @@ public class HeapSearch {
                     pos += INT_SIZE;
                 }
 
-                // moving pointer to the beginning of BN_NAME (col 2)
-                pos += HEADER_SIZE + REG_NAME_SIZE;
+                while (count < 2) {
+                    // moving pointer to the beginning of BN_NAME (col 2)
+                    if (pos + LEN_STR_SIZE > pageSize) {
+                        buffer.clear();
+                        if (fc.read(buffer) != -1) {
+                            buffer.flip();
+                            pos = 0; // reset pointer
+                        } else
+                            break;
+                    }
+                    if (checkNotNull(buffer)) { // REGISTER_NAME
+                        if (pos + REG_NAME_SIZE > pageSize) {
+                            buffer.clear();
+                            if (fc.read(buffer) != -1) {
+                                buffer.flip();
+                                pos = 0; // reset pointer
+                            } else
+                                break;
+                        }
+                        pos += REG_NAME_SIZE;
+                    }
 
-                // get the length of data element
-                try {
-                    lenStr = buffer.get(pos) & 0xff;
-                    pos += HEADER_SIZE;
-                } catch (NumberFormatException e) {
-                    System.err.println(e.getClass().getName() + ": " + e.getMessage());
+                    if (pos + LEN_STR_SIZE > pageSize) {
+                        buffer.clear();
+                        if (fc.read(buffer) != -1) {
+                            buffer.flip();
+                            pos = 0; // reset pointer
+                        } else
+                            break;
+                    }
+                    // get the length of data element
+                    if (getLenStr(buffer)) { // BN_NAME
+                        if (pos + lenStr > pageSize) {
+                            buffer.clear();
+                            if (fc.read(buffer) != -1) {
+                                buffer.flip();
+                                pos = 0; // reset pointer
+                            } else
+                                break;
+                        }
+                        // get BN_NAME
+                        String sName = getString(buffer);
+                    }
+
+                    // move pointer to next BN_NAME
+                    if (pos + LEN_STR_SIZE > pageSize) {
+                        buffer.clear();
+                        if (fc.read(buffer) != -1) {
+                            buffer.flip();
+                            pos = 0; // reset pointer
+                        } else
+                            break;
+                    }
+                    if (checkNotNull(buffer)) {// BN_STATUS
+                        if (pos + STATUS_SIZE > pageSize) {
+                            buffer.clear();
+                            if (fc.read(buffer) != -1) {
+                                buffer.flip();
+                                pos = 0; // reset pointer
+                            } else
+                                break;
+                        }
+                        pos += STATUS_SIZE;
+                    }
+
+                    if (pos + DATE_SIZE > pageSize) {
+                        buffer.clear();
+                        if (fc.read(buffer) != -1) {
+                            buffer.flip();
+                            pos = 0; // reset pointer
+                        } else
+                            break;
+                    }
+                    for (int j = 0; j < 3; j++) { // BN_REG_DT, BN_CANCEL_DT, BN_RENEW_DT
+                        if (checkNotNullDate(buffer))
+                            pos += DATE_SIZE;
+                    }
+
+                    if (pos + LEN_STR_SIZE > pageSize) {
+                        buffer.clear();
+                        if (fc.read(buffer) != -1) {
+                            buffer.flip();
+                            pos = 0; // reset pointer
+                        } else
+                            break;
+                    }
+                    if (checkNotNull(buffer)) { // BN_STATE_NUM
+                        if (pos + STATE_NUM_SIZE > pageSize) {
+                            buffer.clear();
+                            if (fc.read(buffer) != -1) {
+                                buffer.flip();
+                                pos = 0; // reset pointer
+                            } else
+                                break;
+                        }
+                        pos += STATE_NUM_SIZE;
+                    }
+
+                    if (pos + LEN_STR_SIZE > pageSize) {
+                        buffer.clear();
+                        if (fc.read(buffer) != -1) {
+                            buffer.flip();
+                            pos = 0; // reset pointer
+                        } else
+                            break;
+                    }
+                    if (checkNotNull(buffer)) { // BN_STATE_OF_REG
+                        if (pos + STATE_SIZE > pageSize) {
+                            buffer.clear();
+                            if (fc.read(buffer) != -1) {
+                                buffer.flip();
+                                pos = 0; // reset pointer
+                            } else
+                                break;
+                        }
+                        pos += STATE_SIZE;
+                    }
+
+                    if (pos + LEN_STR_SIZE > pageSize) {
+                        buffer.clear();
+                        if (fc.read(buffer) != -1) {
+                            buffer.flip();
+                            pos = 0; // reset pointer
+                        } else
+                            break;
+                    }
+                    if (checkNotNull(buffer)) { // BN_ABN
+                        if (pos + ABN_SIZE > pageSize) {
+                            buffer.clear();
+                            if (fc.read(buffer) != -1) {
+                                buffer.flip();
+                                pos = 0; // reset pointer
+                            } else
+                                break;
+                        }
+                        pos += ABN_SIZE;
+                    }
                 }
-
-                // get BN_NAME
-                byte[] bnName = new byte[lenStr];
-                for (int i = 0; i < 8; i++) {
-                    bnName[i] = buffer.get(pos);
-                    pos++;
-                }
-                String s = new String(bnName, "US-ASCII");
-                System.out.println(s);
-
-//                      for (int i = 0; i < 3; i++) {
-//                    char c = buffer.getChar();
-//                    System.out.print(c);
-//                    System.out.print(", ");
-//                }
-
                 buffer.clear();
             }
-
-//                buf.flip();
-//                numRec = buf.getInt();
-//                buf = null;
-
-//            buf = ByteBuffer.wrap(page);
-//            byte lenStr = buf.get(4);
-//            System.out.println((int)lenStr);
-
-            // get the number of pages need to read to the end of the binary file
-//            numPage = in.available()/pageSize;
-            // read in a page
-//            for (int i = 0, lenFile = numPage; i < lenFile; i++) {
-//                in.readFully(page);
-//                if (i == 0) {
-                    // read the number of records in the file
-//                    numRec = in.readInt();
-//                    pos += INT_SIZE;
-//                    System.out.println("numRec: " + numRec);
-//                }
-//            in.readInt();
-//                int lenStr = (int)page[0];
-//                pos += HEADER_SIZE;
-//                System.out.println("lenStr: " + lenStr);
-//            }
-
             fc.close();
             fis.close();
         } catch (FileNotFoundException e) {
@@ -104,6 +198,51 @@ public class HeapSearch {
         } catch (IOException e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
         }
+    }
+
+    private boolean getLenStr (ByteBuffer buffer) {
+        try {
+            lenStr = buffer.get(pos) & 0xff;
+            pos += LEN_STR_SIZE;
+            if (lenStr == 255)
+                return false;
+        } catch (NumberFormatException e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+        }
+        return true;
+    }
+
+    private boolean checkNotNull (ByteBuffer buffer) {
+        return getLenStr(buffer);
+    }
+
+    private boolean checkNotNullDate (ByteBuffer buffer) {
+        try {
+            lenStr = buffer.get(pos) & 0xff;
+            if (lenStr == 255) {
+                pos += LEN_STR_SIZE;
+                return false;
+            }
+        } catch (NumberFormatException e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+        }
+        return true;
+    }
+
+    private String getString(ByteBuffer buffer) {
+        byte[] bnName = new byte[lenStr];
+        String s = "";
+        for (int i = 0; i < lenStr; i++) {
+            bnName[i] = buffer.get(pos);
+            pos++;
+        }
+        try {
+            s = new String(bnName, "US-ASCII");
+        } catch (UnsupportedEncodingException e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+        }
+        System.out.println(s);
+        return s;
     }
 
     private void showStats(String where, FileChannel fc, Buffer b) throws IOException {
