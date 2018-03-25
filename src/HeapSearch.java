@@ -6,6 +6,7 @@ import java.nio.channels.FileChannel;
 public class HeapSearch {
     private final int INT_SIZE = 4;
     private final int HEADER_SIZE = 1; // each element has a 1 byte header saving the length of the element
+    private final int REG_NAME_SIZE = 20;
     private String queryKey;
     private int pageSize;
 
@@ -19,6 +20,8 @@ public class HeapSearch {
     }
 
     public void launch() {
+        int lenStr = 0;
+
         // read the source file
         //try (FileInputStream fis = new FileInputStream(new File("heap." + Integer.toString(pageSize)))) {
         try (FileInputStream fis = new FileInputStream(new File("heap.64"))) {
@@ -28,19 +31,46 @@ public class HeapSearch {
             ByteBuffer buffer = ByteBuffer.allocate(pageSize);
             // read a page of pageSize bytes
             // -1 means eof.
-            fc.read(buffer);
+            if (fc.read(buffer) != -1) {
                 // accumulate the number of page after read(buf)
                 numPage++;
                 // flip from filling to emptying
                 buffer.flip();
-            showStats( "after flip", fc, buffer );
+
+                // get the first 4 bytes of page 1
                 if (numPage == 1) {
-                    numRec = buffer.getInt(); // get the first 4 bytes of page 1
-                    pos += HEADER_SIZE;
-                    System.out.println("numRec: " + numRec);
+                    numRec = buffer.getInt();
+                    pos += INT_SIZE;
                 }
 
+                // moving pointer to the beginning of BN_NAME (col 2)
+                pos += HEADER_SIZE + REG_NAME_SIZE;
+
+                // get the length of data element
+                try {
+                    lenStr = buffer.get(pos) & 0xff;
+                    pos += HEADER_SIZE;
+                } catch (NumberFormatException e) {
+                    System.err.println(e.getClass().getName() + ": " + e.getMessage());
+                }
+
+                // get BN_NAME
+                byte[] bnName = new byte[lenStr];
+                for (int i = 0; i < 8; i++) {
+                    bnName[i] = buffer.get(pos);
+                    pos++;
+                }
+                String s = new String(bnName, "US-ASCII");
+                System.out.println(s);
+
+//                      for (int i = 0; i < 3; i++) {
+//                    char c = buffer.getChar();
+//                    System.out.print(c);
+//                    System.out.print(", ");
+//                }
+
                 buffer.clear();
+            }
 
 //                buf.flip();
 //                numRec = buf.getInt();
