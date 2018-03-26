@@ -162,24 +162,27 @@ public class HeapFileCreater {
     }
 
     private void saveVariableString (String s) {
+        int pointer = 0;
         // get the content in bytes
         byte[] buffer = s.getBytes();
-        // write the length using 1 byte in front of register name string
-        byte[] lenStr = {(byte)s.length()};
-        ArrayCopy(lenStr, page);
-        ArrayCopy(buffer, page);
+        // write the length using 4 bytes in front of register name string
+        byte[] lenStr = ByteBuffer.allocate(INT_SIZE).putInt(s.length()).array();
+        byte[] wrapper = new byte[lenStr.length + buffer.length];
+        pointer = Copy(lenStr, wrapper, pointer);
+        Copy(buffer, wrapper, pointer);
+        ArrayCopy(wrapper, page);
     }
 
     private void saveFixedString (String s, int size) {
+        int pointer = 0;
         // get the content in bytes
         byte[] buffer = s.getBytes();
-        // write the length using 1 byte in front of register name string
-        byte[] lenStr = {(byte)s.length()};
-        ArrayCopy(lenStr, page);
-        // ensure fixed length of 20 bytes
-        byte[] caster = new byte[size];
-        System.arraycopy(buffer, 0, caster, 0, buffer.length);
-        ArrayCopy(caster, page);
+        // write the length using 4 bytes in front of register name string
+        byte[] lenStr = ByteBuffer.allocate(INT_SIZE).putInt(s.length()).array();
+        byte[] wrapper = new byte[lenStr.length + size];
+        pointer = Copy(lenStr, wrapper, pointer);
+        Copy(buffer, wrapper, pointer);
+        ArrayCopy(wrapper, page);
     }
 
     private void ArrayCopy (byte[] src, byte[] dest) {
@@ -189,6 +192,12 @@ public class HeapFileCreater {
         } else {
             isPageFull = true;
         }
+    }
+
+    private int Copy (byte[] src, byte[] dest, int pointer) {
+        System.arraycopy(src, 0, dest, pointer, src.length);
+        pointer += src.length;
+        return pointer;
     }
 
     private void saveDate (String s, int size) {

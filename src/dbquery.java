@@ -1,6 +1,6 @@
 public class dbquery {
     private static String queryKey = "RPR COMMUNICATIONS";
-    private static int pageSize = 128;
+    private static int pageSize = 1024;
 
     public static void main(String[] args) {
         HeapSearch heapSearch = new HeapSearch(queryKey, pageSize);
