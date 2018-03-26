@@ -21,7 +21,7 @@ public class rtest {
 
     public void launch() {
         // read the source file
-        try (FileInputStream fis = new FileInputStream(new File("heap." + Integer.toString(pageSize)))) {
+        try (FileInputStream fis = new FileInputStream(new File("heap.128"))) {
             // allocate a channel to read the file
             FileChannel fc = fis.getChannel();
 
@@ -38,6 +38,17 @@ public class rtest {
 //            showStats( "before flip", fc, buffer );
             buffer.flip();
 //            showStats( "after flip", fc, buffer );
+
+
+            int lenStr = buffer.get(4);
+            pos ++;
+            System.out.println(lenStr);
+            if (lenStr == -1)
+                System.out.println("Null found.");
+            else
+                System.out.println("Null not found.");
+
+
             byte[] receive = new byte[ 4 ];
             buffer.get( receive );
             showStats( "after first get", fc, buffer );

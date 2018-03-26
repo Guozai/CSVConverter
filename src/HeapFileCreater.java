@@ -67,21 +67,33 @@ public class HeapFileCreater {
                 while((eachline = br.readLine()) != null) {
                     String[] splited = eachline.split(cvsSpliter);
 
-                    if (!isPageFull)
-                        saveElements(0, splited);
-                    else { // page full
-                        fillPageWithZero(pos);
-                        os.write(page);
-                        os.flush();
-
-                        isPageFull = false; // reset the flag
-                        countPage++;
-                        pos = 0; // reset position pointer of page
-                        // save the rest of record to the new page starting from pcol
-                        saveElements(pcol, splited);
-                        pcol = 0; // reset position
+                    for (int i = 0; i < splited.length; i++) {
+                        String s = splited[i]; // temporary variable to store tokens
+                        if (!isPageFull)
+                            saveElement(s);
+                        else { // page full
+                            break;
+                        }
                     }
 
+                    fillPageWithZero(pos);
+                    os.write(page);
+                    os.flush();
+
+                    isPageFull = false; // reset the flag
+                    countPage++;
+                    pos = 0; // reset position pointer of page
+
+                    System.out.println("Page: " + countPage + ", Column: " + pcol);
+
+                    // save the rest of record to the new page starting from pcol
+                    if (pcol > 0) {
+                        for (int i = pcol; i < splited.length; i++) {
+                            String s = splited[i];
+                            saveElement(s);
+                        }
+                    }
+                    pcol = 0; // reset pcol after saving the rest of records of this line
                 }
                 if (countPage > 1)
                     fillPageWithZero(pos);
@@ -98,62 +110,50 @@ public class HeapFileCreater {
         System.out.println("Number of pages used:     " + countPage);
     }
 
-    private void saveElements(int pcol, String[] splited) {
-        // temporary variable to store tokens
-        String s = "";
-        for (int i = 0; i < splited.length; i++) {
-            s = splited[i];
-            // this data element is empty
-            if (s.length() == 0) {
-                // add FF as the length of this element
-                byte[] lenStr = {(byte) -1};
-                ArrayCopy(lenStr, page);
-                if (!isPageFull) {
-                    if (pcol < columnNum)
-                        pcol++;
-                }
-            } else {
-                switch (i) {
-                    case 0: // REGISTER_NAME
-                        saveFixedString(s, REG_NAME_SIZE);
-                        if (!isPageFull)
-                            pcol++;
-                        break;
-                    case 2: // BN_STATUS
-                        saveFixedString(s, STATUS_SIZE);
-                        if (!isPageFull)
-                            pcol++;
-                        break;
-                    case 3: // BN_REG_DT
-                    case 4: // BN_CANCEL_DT
-                    case 5: // BN_RENEW_DT
-                        saveDate(s, DATE_SIZE);
-                        if (!isPageFull)
-                            pcol++;
-                        break;
-                    case 6: // BN_STATE_NUM
-                        saveFixedString(s, STATE_NUM_SIZE);
-                        if (!isPageFull)
-                            pcol++;
-                        break;
-                    case 7: // BN_STATE_OF_REG
-                        saveFixedString(s, STATE_SIZE);
-                        if (!isPageFull)
-                            pcol++;
-                        break;
-                    case 8: // BN_ABN
-                        saveFixedString(s, ABN_SIZE);
-                        if (!isPageFull)
-                            pcol++;
-                        break;
-                    case 1: // BN_NAME
-                    default:
-                        saveVariableString(s);
-                        if (!isPageFull)
-                            pcol++;
-                        break;
-                }
+    private void saveElement(String s) {
+        // this data element is empty
+        if (s.length() == 0) {
+            // add FF as the length of this element
+            byte[] lenStr = {(byte) -1};
+            ArrayCopy(lenStr, page);
+            if (!isPageFull) {
+                if (pcol < columnNum)
+                    pcol++;
             }
+        } else {
+            switch (pcol) {
+                case 0: // REGISTER_NAME
+                    saveFixedString(s, REG_NAME_SIZE);
+                    break;
+                case 2: // BN_STATUS
+                    saveFixedString(s, STATUS_SIZE);
+                    break;
+                case 3: // BN_REG_DT
+                case 4: // BN_CANCEL_DT
+                case 5: // BN_RENEW_DT
+                    saveDate(s, DATE_SIZE);
+                    break;
+                case 6: // BN_STATE_NUM
+                    saveFixedString(s, STATE_NUM_SIZE);
+                    break;
+                case 7: // BN_STATE_OF_REG
+                    saveFixedString(s, STATE_SIZE);
+                    break;
+                case 8: // BN_ABN
+                    saveFixedString(s, ABN_SIZE);
+                    break;
+                case 1: // BN_NAME
+                default:
+                    saveVariableString(s);
+                    break;
+            }
+            if (!isPageFull)
+                pcol++;
+
+
+            System.out.println(s + pos);
+
+
             // put comma at the end of each line
             if (pcol == columnNum) {
                 byte[] lenStr = ",".getBytes();
