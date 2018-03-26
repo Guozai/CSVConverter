@@ -84,8 +84,6 @@ public class HeapFileCreater {
                     countPage++;
                     pos = 0; // reset position pointer of page
 
-                    System.out.println("Page: " + countPage + ", Column: " + pcol);
-
                     // save the rest of record to the new page starting from pcol
                     if (pcol > 0) {
                         for (int i = pcol; i < splited.length; i++) {
@@ -149,10 +147,6 @@ public class HeapFileCreater {
             }
             if (!isPageFull)
                 pcol++;
-
-
-            System.out.println(s + pos);
-
 
             // put comma at the end of each line
             if (pcol == columnNum) {
