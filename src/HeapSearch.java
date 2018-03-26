@@ -9,6 +9,7 @@ public class HeapSearch {
     private final int REG_NAME_SIZE = 20;
     private final int BN_NAME_SIZE = 200;
     private final int STATUS_SIZE = 15;
+    private final int DATE_SIZE = INT_SIZE * 3;
     private final int STATE_NUM_SIZE = 20;
     private final int STATE_SIZE = 3;
     private final int ABN_SIZE = 13;
@@ -16,6 +17,7 @@ public class HeapSearch {
     private final int RECORD_SIZE = REG_NAME_SIZE + BN_NAME_SIZE + STATUS_SIZE + STATE_NUM_SIZE + STATE_SIZE + ABN_SIZE + INT_SIZE * 3 + LEN_STR_SIZE * 6;
     private String queryKey;
     private int pageSize;
+    private String fileName;
     private int lenStr = 0;
 
     private int pos = 0; // position pointer
@@ -27,13 +29,14 @@ public class HeapSearch {
     public HeapSearch (String queryKey, int pageSize) {
         this.queryKey = queryKey;
         this.pageSize = pageSize;
+        fileName = "heap." + Integer.toString(pageSize);
     }
 
     public void launch() {
+        System.out.println("------------------------------------------");
 
         // read the source file
-        //try (FileInputStream fis = new FileInputStream(new File("heap." + Integer.toString(pageSize)))) {
-        try (FileInputStream fis = new FileInputStream(new File("heap.128"))) {
+        try (FileInputStream fis = new FileInputStream(new File(fileName))) {
             // allocate a channel to read the file
             FileChannel fc = fis.getChannel();
             // allocate a buffer, size of pageSize
@@ -52,11 +55,11 @@ public class HeapSearch {
                     pos += INT_SIZE;
                 }
 
-                while (countRec < 2) { // while (countRec < numRec)
+                while (countRec < 13) { // while (countRec < numRec)
                     // moving pointer to the beginning of BN_NAME (col 2)
                     // if position over page size, read another page
 
-                    if (pos + LEN_STR_SIZE > pageSize) {
+                    if (pos + LEN_STR_SIZE >= pageSize) {
                         buffer.clear();
                         if (fc.read(buffer) != -1) {
                             buffer.flip();
@@ -65,6 +68,10 @@ public class HeapSearch {
                             break;
                     }
                     if (checkNotNull(buffer)) { // REGISTER_NAME
+
+                        System.out.println("regName LenStr " + pos);
+                        System.out.println("regName Length: " + lenStr);
+
                         if (pos + REG_NAME_SIZE > pageSize) {
                             buffer.clear();
                             if (fc.read(buffer) != -1) {
@@ -75,9 +82,11 @@ public class HeapSearch {
                         }
                         pos += REG_NAME_SIZE;
                     }
+                    countRec++;
+
                     System.out.println("regName: " + pos);
 
-                    if (pos + LEN_STR_SIZE > pageSize) {
+                    if (pos + LEN_STR_SIZE >= pageSize) {
                         buffer.clear();
                         if (fc.read(buffer) != -1) {
                             buffer.flip();
@@ -87,7 +96,11 @@ public class HeapSearch {
                     }
                     // get the length of data element
                     if (getLenStr(buffer)) { // BN_NAME
-                        if (pos + lenStr > pageSize) {
+
+                        System.out.println("bn name LenStr " + pos);
+                        System.out.println("bn Name Length: " + lenStr);
+
+                        if (pos + lenStr >= pageSize) {
                             buffer.clear();
                             if (fc.read(buffer) != -1) {
                                 buffer.flip();
@@ -99,10 +112,12 @@ public class HeapSearch {
                         String sName = getString(buffer);
                         System.out.println(sName);
                     }
+                    countRec++;
+
                     System.out.println("bnName: " + pos);
 
                     // move pointer to next BN_NAME
-                    if (pos + LEN_STR_SIZE > pageSize) {
+                    if (pos + LEN_STR_SIZE >= pageSize) {
                         buffer.clear();
                         if (fc.read(buffer) != -1) {
                             buffer.flip();
@@ -111,7 +126,7 @@ public class HeapSearch {
                             break;
                     }
                     if (checkNotNull(buffer)) {            // BN_STATUS
-                        if (pos + STATUS_SIZE > pageSize) {
+                        if (pos + STATUS_SIZE >= pageSize) {
                             buffer.clear();
                             if (fc.read(buffer) != -1) {
                                 buffer.flip();
@@ -121,9 +136,12 @@ public class HeapSearch {
                         }
                         pos += STATUS_SIZE;
                     }
+                    countRec++;
+
+                    System.out.println("status: " + pos);
 
                     for (int j = 0; j < 3; j++) { // BN_REG_DT, BN_CANCEL_DT, BN_RENEW_DT
-                        if (pos + INT_SIZE > pageSize) {
+                        if (pos + INT_SIZE >= pageSize) {
                             buffer.clear();
                             if (fc.read(buffer) != -1) {
                                 buffer.flip();
@@ -131,10 +149,8 @@ public class HeapSearch {
                             } else
                                 break;
                         }
-                        if (checkNotNullDate(buffer)) {
-                            pos += INT_SIZE;
-                        } else {
-                            if (pos + LEN_STR_SIZE > pageSize) {
+                        if (!checkNotNullDate(buffer)) {
+                            if (pos + LEN_STR_SIZE >= pageSize) {
                                 buffer.clear();
                                 if (fc.read(buffer) != -1) {
                                     buffer.flip();
@@ -145,10 +161,11 @@ public class HeapSearch {
                                 pos += LEN_STR_SIZE;
                             }
                         }
+                        countRec++;
                     }
                     System.out.println("3 dates after: " + pos);
 
-                    if (pos + LEN_STR_SIZE > pageSize) {
+                    if (pos + LEN_STR_SIZE >= pageSize) {
                         buffer.clear();
                         if (fc.read(buffer) != -1) {
                             buffer.flip();
@@ -157,7 +174,7 @@ public class HeapSearch {
                             break;
                     }
                     if (checkNotNull(buffer)) {               // BN_STATE_NUM
-                        if (pos + STATE_NUM_SIZE > pageSize) {
+                        if (pos + STATE_NUM_SIZE >= pageSize) {
                             buffer.clear();
                             if (fc.read(buffer) != -1) {
                                 buffer.flip();
@@ -167,9 +184,11 @@ public class HeapSearch {
                         }
                         pos += STATE_NUM_SIZE;
                     }
+                    countRec++;
+
                     System.out.println("State number: " + pos);
 
-                    if (pos + LEN_STR_SIZE > pageSize) {
+                    if (pos + LEN_STR_SIZE >= pageSize) {
                         buffer.clear();
                         if (fc.read(buffer) != -1) {
                             buffer.flip();
@@ -178,7 +197,7 @@ public class HeapSearch {
                             break;
                     }
                     if (checkNotNull(buffer)) {           // BN_STATE_OF_REG
-                        if (pos + STATE_SIZE > pageSize) {
+                        if (pos + STATE_SIZE >= pageSize) {
                             buffer.clear();
                             if (fc.read(buffer) != -1) {
                                 buffer.flip();
@@ -188,9 +207,11 @@ public class HeapSearch {
                         }
                         pos += STATE_SIZE;
                     }
+                    countRec++;
+
                     System.out.println("State of reg: " + pos);
 
-                    if (pos + LEN_STR_SIZE > pageSize) {
+                    if (pos + LEN_STR_SIZE >= pageSize) {
                         buffer.clear();
                         if (fc.read(buffer) != -1) {
                             buffer.flip();
@@ -199,7 +220,7 @@ public class HeapSearch {
                             break;
                     }
                     if (checkNotNull(buffer)) {         // BN_ABN
-                        if (pos + ABN_SIZE > pageSize) {
+                        if (pos + ABN_SIZE >= pageSize) {
                             buffer.clear();
                             if (fc.read(buffer) != -1) {
                                 buffer.flip();
@@ -209,9 +230,11 @@ public class HeapSearch {
                         }
                         pos += ABN_SIZE;
                     }
+                    countRec++;
+
                     System.out.println("abn: " + pos);
 
-                    if (pos + COMMA_SIZE + RECORD_SIZE > pageSize) {
+                    if (pos + COMMA_SIZE >= pageSize) {
                         buffer.clear();
                         if (fc.read(buffer) != -1) {
                             buffer.flip();
@@ -221,9 +244,7 @@ public class HeapSearch {
                     } else {
                         pos += COMMA_SIZE;
                     }
-                    System.out.println("comma: " + pos);
-
-                    countRec++;
+                    System.out.println("after comma: " + pos);
                 }
                 buffer.clear();
             }
@@ -238,10 +259,12 @@ public class HeapSearch {
 
     private boolean getLenStr (ByteBuffer buffer) {
         try {
-            lenStr = buffer.get(pos);
+            byte temp = buffer.get(pos);
             pos += LEN_STR_SIZE;
-            if (lenStr == -1) // found null element
+            if ((int)temp == -1) // found null element
                 return false;
+            else
+                lenStr = temp & 0xff;
         } catch (NumberFormatException e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
         }
@@ -254,11 +277,12 @@ public class HeapSearch {
 
     private boolean checkNotNullDate (ByteBuffer buffer) {
         try {
-            lenStr = buffer.get(pos);
-            if (lenStr == -1) { // found null element
+            byte temp = buffer.get(pos);
+            if ((int)temp == -1) { // found null element
                 pos += LEN_STR_SIZE;
                 return false;
-            }
+            } else
+                pos += DATE_SIZE;
         } catch (NumberFormatException e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
         }

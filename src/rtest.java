@@ -40,29 +40,30 @@ public class rtest {
 //            showStats( "after flip", fc, buffer );
 
 
-            int lenStr = buffer.get(4);
-            pos ++;
+            int lenStr = buffer.get(4) & 0xff;
+
+            // int bnLen = buffer.get(25) & 0xff;
             System.out.println(lenStr);
-            if (lenStr == -1)
-                System.out.println("Null found.");
-            else
-                System.out.println("Null not found.");
+//            if (bnLen == -1)
+//                System.out.println("Null found.");
+//            else
+//                System.out.println("Null not found.");
 
 
             byte[] receive = new byte[ 4 ];
             buffer.get( receive );
-            showStats( "after first get", fc, buffer );
+//            showStats( "after first get", fc, buffer );
             buffer.get( receive );
-            showStats( "after second get", fc, buffer );
+//            showStats( "after second get", fc, buffer );
             // empty buffer to fill with more data.
             buffer.clear();
-            showStats( "after clear", fc, buffer );
+//            showStats( "after clear", fc, buffer );
             bytesRead = fc.read( buffer );
-            showStats( "after second read", fc, buffer );
+//            showStats( "after second read", fc, buffer );
             // flip from filling to emptying
-            showStats( "before flip", fc, buffer );
+//            showStats( "before flip", fc, buffer );
             buffer.flip();
-            showStats( "after flip", fc, buffer );
+//            showStats( "after flip", fc, buffer );
 
 //            if (fc.read(buf) != -1) {
 //                System.out.println(fc.size());
