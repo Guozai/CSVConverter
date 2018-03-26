@@ -74,6 +74,12 @@ public class HeapSearch {
                             break;
                         case 1: // business name
 
+                            if (pos + INT_SIZE + BN_NAME_SIZE < pageSize) {
+                                if (checkNotNull(buffer))
+                                    pos += INT_SIZE + BN_NAME_SIZE;
+                                else
+                                    pos += INT_SIZE;
+                            }
                             break;
                         case 2:
                             break;
@@ -81,10 +87,7 @@ public class HeapSearch {
                         case 4:
                         case 5:
                             if (pos + DATE_SIZE < pageSize) {
-                                if (checkNotNullDate(buffer))
-                                    pos += DATE_SIZE;
-                                else
-                                    pos += INT_SIZE;
+                                pos += DATE_SIZE;
                                 pcol++;
                             } else {
                                 isEndPage = true;
@@ -492,17 +495,6 @@ public class HeapSearch {
 
     private boolean checkNotNull (ByteBuffer buffer) {
         return getLenStr(buffer);
-    }
-
-    private boolean checkNotNullDate (ByteBuffer buffer) {
-        try {
-            lenStr = buffer.getInt();
-            if (lenStr == -1) // found null element
-                return false;
-        } catch (NumberFormatException e) {
-            System.err.println(e.getClass().getName() + ": " + e.getMessage());
-        }
-        return true;
     }
 
     private String getString(ByteBuffer buffer) {

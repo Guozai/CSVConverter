@@ -167,10 +167,8 @@ public class HeapFileCreater {
         byte[] buffer = s.getBytes();
         // write the length using 4 bytes in front of register name string
         byte[] lenStr = ByteBuffer.allocate(INT_SIZE).putInt(s.length()).array();
-        byte[] wrapper = new byte[lenStr.length + buffer.length];
-        pointer = Copy(lenStr, wrapper, pointer);
-        Copy(buffer, wrapper, pointer);
-        ArrayCopy(wrapper, page);
+        ArrayCopy(lenStr, page);
+        ArrayCopy(buffer, page);
     }
 
     private void saveFixedString (String s, int size) {
