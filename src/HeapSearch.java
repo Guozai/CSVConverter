@@ -7,12 +7,13 @@ public class HeapSearch {
     private final int INT_SIZE = 4;
     private final int LEN_STR_SIZE = 1; // each element has a 1 byte header saving the length of the element
     private final int REG_NAME_SIZE = 20;
+    private final int BN_NAME_SIZE = 200;
     private final int STATUS_SIZE = 15;
     private final int STATE_NUM_SIZE = 20;
     private final int STATE_SIZE = 3;
     private final int ABN_SIZE = 13;
     private final int COMMA_SIZE = 1;
-    private final int RECORD_SIZE = REG_NAME_SIZE + STATUS_SIZE + STATE_NUM_SIZE + STATE_SIZE + ABN_SIZE + INT_SIZE * 3 + 60;
+    private final int RECORD_SIZE = REG_NAME_SIZE + BN_NAME_SIZE + STATUS_SIZE + STATE_NUM_SIZE + STATE_SIZE + ABN_SIZE + INT_SIZE * 3 + LEN_STR_SIZE * 6;
     private String queryKey;
     private int pageSize;
     private int lenStr = 0;

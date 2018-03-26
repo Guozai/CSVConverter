@@ -67,7 +67,7 @@ public class HeapFileCreater {
                 while((eachline = br.readLine()) != null) {
                     String[] splited = eachline.split(cvsSpliter);
 
-                    for (int i = 0; i < splited.length; i++) {
+                    for (int i = pcol; i < splited.length; i++) {
                         String s = splited[i]; // temporary variable to store tokens
                         if (!isPageFull)
                             saveElement(s);
@@ -76,22 +76,17 @@ public class HeapFileCreater {
                         }
                     }
 
-                    fillPageWithZero(pos);
-                    os.write(page);
-                    os.flush();
+                    System.out.println("Page: " + countPage + ", Column: " + pcol);
 
-                    isPageFull = false; // reset the flag
-                    countPage++;
-                    pos = 0; // reset position pointer of page
+                    if (isPageFull) {
+                        fillPageWithZero(pos);
+                        os.write(page);
+                        os.flush();
 
-                    // save the rest of record to the new page starting from pcol
-                    if (pcol > 0) {
-                        for (int i = pcol; i < splited.length; i++) {
-                            String s = splited[i];
-                            saveElement(s);
-                        }
+                        isPageFull = false; // reset the flag
+                        countPage++;
+                        pos = 0; // reset position pointer of page
                     }
-                    pcol = 0; // reset pcol after saving the rest of records of this line
                 }
                 if (countPage > 1)
                     fillPageWithZero(pos);
@@ -145,15 +140,23 @@ public class HeapFileCreater {
                     saveVariableString(s);
                     break;
             }
+
+
+            System.out.print(pcol + ", "); System.out.println(isPageFull);
+
             if (!isPageFull)
                 pcol++;
+
+
+            System.out.println(s + pos);
+
 
             // put comma at the end of each line
             if (pcol == columnNum) {
                 byte[] lenStr = ",".getBytes();
                 ArrayCopy(lenStr, page);
                 if (!isPageFull)
-                    pcol = 0;
+                    pcol = 0; // reset pcol at the end of each line
             }
         }
     }
