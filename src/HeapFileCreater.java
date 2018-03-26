@@ -124,7 +124,7 @@ public class HeapFileCreater {
                 case 3: // BN_REG_DT
                 case 4: // BN_CANCEL_DT
                 case 5: // BN_RENEW_DT
-                    saveDate(s, DATE_SIZE);
+                    saveDate(s);
                     break;
                 case 6: // BN_STATE_NUM
                     saveFixedString(s, STATE_NUM_SIZE);
@@ -187,7 +187,11 @@ public class HeapFileCreater {
 
     private void ArrayCopy (byte[] src, byte[] dest) {
         if ((pos + src.length) < pageSize) {
-            System.arraycopy(src, 0, dest, pos, src.length);
+            try {
+                System.arraycopy(src, 0, dest, pos, src.length);
+            } catch (ArrayIndexOutOfBoundsException e) {
+                System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            }
             pos += src.length;
         } else {
             isPageFull = true;
@@ -195,36 +199,33 @@ public class HeapFileCreater {
     }
 
     private int Copy (byte[] src, byte[] dest, int pointer) {
-        System.arraycopy(src, 0, dest, pointer, src.length);
+        try {
+            System.arraycopy(src, 0, dest, pointer, src.length);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+        }
         pointer += src.length;
         return pointer;
     }
 
-    private void saveDate (String s, int size) {
+    private void saveDate (String s) {
+        String[] splitted = s.split("/");
+        byte[] bnDate = new byte[DATE_SIZE];
+        byte[] bdate;
         try {
-            String[] splitted = s.split("/");
             // if having DD MM YYYY, do formatting
             if (splitted.length == 3) {
-                byte[] bnDate = new byte[size];
                 for(int i = 0; i < 3; i++) {
-                    int dpart = Integer.parseInt(splitted[i]);
-                    byte[] bdate = ByteBuffer.allocate(INT_SIZE).putInt(dpart).array();
-
-                    try {
-                        System.arraycopy(bdate, 0, bnDate, i * bdate.length, bdate.length);
-                    } catch (ArrayIndexOutOfBoundsException e) {
-                        System.err.println(e.getClass().getName() + ": " + e.getMessage());
+                    if (splitted[i].length() == 0) {
+                        bdate = ByteBuffer.allocate(INT_SIZE).putInt(-1).array();
+                    } else {
+                        int dpart = Integer.parseInt(splitted[i]);
+                        bdate = ByteBuffer.allocate(INT_SIZE).putInt(dpart).array();
                     }
+                    Copy(bdate, bnDate, i * bdate.length);
                 }
-                if ((pos + bnDate.length) < pageSize) {
-                    System.arraycopy(bnDate, 0, page, pos, bnDate.length);
-                    pos += bnDate.length;
-                } else {
-                    isPageFull = true;
-                }
+                ArrayCopy(bnDate, page);
             }
-        } catch (ArrayIndexOutOfBoundsException e) {
-            System.err.println(e.getClass().getName() + ": " + e.getMessage());
         } catch (Exception e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
         }

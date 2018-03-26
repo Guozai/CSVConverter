@@ -21,6 +21,9 @@ public class HeapSearch {
 
     private int lenStr = 0;
     private int pos = 0; // position pointer
+    private int pcol = 0;
+    private boolean isEndPage = false;
+    private boolean isEndFile = false;
     private int numRec = 0; // number of records in the file
     private int numPage = 0;
     // count of record searched
@@ -48,11 +51,59 @@ public class HeapSearch {
                 numPage++;
                 // flip from filling to emptying
                 buffer.flip();
+                // reset pointer
+                pos = 0;
 
                 if (numPage == 1) {
                     numRec = buffer.getInt();
                     pos += INT_SIZE;
                 }
+
+                while (countRec < numRec && !isEndPage) {
+                    switch (pcol) {
+                        case 0: // register name
+                            if (pos + INT_SIZE + REG_NAME_SIZE < pageSize) {
+                                if (checkNotNull(buffer))
+                                    pos += INT_SIZE + REG_NAME_SIZE;
+                                else
+                                    pos += INT_SIZE;
+                                pcol++; // next column
+                            } else {
+                                isEndPage = true;
+                            }
+                            break;
+                        case 1: // business name
+
+                            break;
+                        case 2:
+                            break;
+                        case 3:
+                        case 4:
+                        case 5:
+                            if (pos + DATE_SIZE < pageSize) {
+                                if (checkNotNullDate(buffer))
+                                    pos += DATE_SIZE;
+                                else
+                                    pos += INT_SIZE;
+                                pcol++;
+                            } else {
+                                isEndPage = true;
+                            }
+                            break;
+                        case 6:
+                            break;
+                        case 7:
+                            break;
+                        case 8:
+                            break;
+                        case 9:  // comma
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                // end of page
+                buffer.clear();
             }
 
 //            if (fc.read(buffer) != -1) {
@@ -430,12 +481,9 @@ public class HeapSearch {
 
     private boolean getLenStr (ByteBuffer buffer) {
         try {
-            byte temp = buffer.get(pos);
-            pos += LEN_STR_SIZE;
-            if ((int)temp == -1) // found null element
+            lenStr = buffer.getInt();
+            if (lenStr == -1) // found null element
                 return false;
-            else
-                lenStr = temp & 0xff;
         } catch (NumberFormatException e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
         }
@@ -448,12 +496,9 @@ public class HeapSearch {
 
     private boolean checkNotNullDate (ByteBuffer buffer) {
         try {
-            byte temp = buffer.get(pos);
-            if ((int)temp == -1) { // found null element
-                pos += LEN_STR_SIZE;
+            lenStr = buffer.getInt();
+            if (lenStr == -1) // found null element
                 return false;
-            } else
-                pos += DATE_SIZE;
         } catch (NumberFormatException e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
         }
