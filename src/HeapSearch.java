@@ -28,6 +28,7 @@ public class HeapSearch {
     private int numPage = 0;
     // count of record searched
     private int countRec = 0;
+    private int countFound = 0;
 
     public HeapSearch (String queryKey, int pageSize) {
         this.queryKey = queryKey;
@@ -54,10 +55,8 @@ public class HeapSearch {
                 // reset pointer
                 pos = 0;
 
-                if (numPage == 1) {
+                if (numPage == 1)
                     numRec = buffer.getInt();
-                    pos += INT_SIZE;
-                }
 
                 while (countRec < numRec && !isEndPage) {
                     switch (pcol) {
@@ -73,37 +72,98 @@ public class HeapSearch {
                             }
                             break;
                         case 1: // business name
-
-                            if (pos + INT_SIZE + BN_NAME_SIZE < pageSize) {
-                                if (checkNotNull(buffer))
-                                    pos += INT_SIZE + BN_NAME_SIZE;
-                                else
+                            String sName = "";
+                            if (pos + INT_SIZE < pageSize) {
+                                if (checkNotNull(buffer)) {
+                                    if (pos + INT_SIZE + lenStr < pageSize)
+                                        sName = getString(buffer);
+                                    else {
+                                        isEndPage = true;
+                                    }
+                                }
+                                else {
                                     pos += INT_SIZE;
-                            }
-                            break;
-                        case 2:
-                            break;
-                        case 3:
-                        case 4:
-                        case 5:
-                            if (pos + DATE_SIZE < pageSize) {
-                                pos += DATE_SIZE;
+                                }
+                                if (sName.equals(queryKey))
+                                    countFound++;
                                 pcol++;
                             } else {
                                 isEndPage = true;
                             }
                             break;
-                        case 6:
+                        case 2: // business status
+                            if (pos + INT_SIZE + STATUS_SIZE < pageSize) {
+                                if (checkNotNull(buffer))
+                                    pos += INT_SIZE + STATUS_SIZE;
+                                else
+                                    pos += INT_SIZE;
+                                pcol++;
+                            } else {
+                                isEndPage = true;
+                            }
                             break;
-                        case 7:
+                        case 3: // BN_REG_DT
+                        case 4: // BN_CANCEL_DT
+                        case 5: // BN_RENEW_DT
+                            if (pos + INT_SIZE < pageSize) {
+                                if (checkNotNull(buffer)) {
+                                    if (pos + DATE_SIZE < pageSize)
+                                        pos += DATE_SIZE;
+                                    else
+                                        isEndPage = true;
+                                } else
+                                    pos += INT_SIZE;
+                                pcol++;
+                            } else {
+                                isEndPage = true;
+                            }
                             break;
-                        case 8:
+                        case 6: // business state number
+                            if (pos + INT_SIZE + STATE_NUM_SIZE < pageSize) {
+                                if (checkNotNull(buffer))
+                                    pos += INT_SIZE + STATE_NUM_SIZE;
+                                else
+                                    pos += INT_SIZE;
+                                pcol++;
+                            } else {
+                                isEndPage = true;
+                            }
+                            break;
+                        case 7: // state of registration
+                            if (pos + INT_SIZE + STATE_SIZE < pageSize) {
+                                if (checkNotNull(buffer))
+                                    pos += INT_SIZE + STATE_SIZE;
+                                else
+                                    pos += INT_SIZE;
+                                pcol++;
+                            } else {
+                                isEndPage = true;
+                            }
+                            break;
+                        case 8: // abn number
+                            if (pos + INT_SIZE + ABN_SIZE < pageSize) {
+                                if (checkNotNull(buffer))
+                                    pos += INT_SIZE + ABN_SIZE;
+                                else
+                                    pos += INT_SIZE;
+                                pcol++;
+                            } else {
+                                isEndPage = true;
+                            }
                             break;
                         case 9:  // comma
+                            if (pos + COMMA_SIZE < pageSize) {
+                                pos += COMMA_SIZE;
+                                pcol++;
+                            } else {
+                                isEndPage = true;
+                            }
                             break;
                         default:
                             break;
                     }
+                    if (isEndPage)
+                        break;
                 }
                 // end of page
                 buffer.clear();
@@ -480,6 +540,10 @@ public class HeapSearch {
         } catch (IOException e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
         }
+        if (countFound == 0)
+            System.out.println("BN_Name does not contain " + queryKey + ".");
+        else
+            System.out.println(countFound + " recprds found containing " + queryKey + "!");
     }
 
     private boolean getLenStr (ByteBuffer buffer) {
@@ -500,6 +564,7 @@ public class HeapSearch {
     private String getString(ByteBuffer buffer) {
         byte[] bnName = new byte[lenStr];
         String s = "";
+        pos += INT_SIZE;
         for (int i = 0; i < lenStr; i++) {
             bnName[i] = buffer.get(pos);
             pos++;

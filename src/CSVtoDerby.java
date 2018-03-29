@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 public class CSVtoDerby {
-    //private static String csvFile = "BUSINESS_NAMES_201803.csv";
-    private static String csvFile = "asic.csv";
+    private static String csvFile = "BUSINESS_NAMES_201803.csv";
+   // private static String csvFile = "asic.csv";
     private static String registerName = "BUSINESS NAMES";
     private static String[] status = new String[] {"Registered", "Deregistered"};
     private static String[] states = new String[] {"ACT", "NSW", "NT", "QLD", "SA", "TAS", "VIC", "WA"};
@@ -17,6 +17,9 @@ public class CSVtoDerby {
 
         CSVtoDEL();
         // extract repeated elements to child tables
+        createDELSingleString(registerName, "regName.del");
+        createDEL(status, "status.del");
+        createDEL(states, "states.del");
 
         long stopTime = System.currentTimeMillis();
         double elapsedTime = (stopTime - startTime) / 1000.0; // execution time of the program in seconds
@@ -116,6 +119,25 @@ public class CSVtoDerby {
                 }
             } catch (IOException e) {
                 System.err.println(e.getClass().getName() + ": " + e.getMessage());
+            }
+        } catch (IOException e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+        }
+    }
+
+    private static void createDELSingleString(String data, String fileName) {
+        try (PrintWriter out = new PrintWriter(fileName)) {
+            out.println(1 + "," + addDoubleQuotesAround(data));
+        } catch (IOException e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+        }
+    }
+
+    private static void createDEL(String[] dataset, String fileName) {
+        try (PrintWriter out = new PrintWriter(fileName)) {
+            for (int i = 0; i < dataset.length; i++) {
+                out.print((i+1) + ",");
+                out.println(addDoubleQuotesAround(dataset[i]));
             }
         } catch (IOException e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());

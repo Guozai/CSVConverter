@@ -76,8 +76,6 @@ public class HeapFileCreater {
                         }
                     }
 
-                    System.out.println("Page: " + countPage + ", Column: " + pcol);
-
                     if (isPageFull) {
                         fillPageWithZero(pos);
                         os.write(page);
@@ -140,16 +138,8 @@ public class HeapFileCreater {
                     saveVariableString(s);
                     break;
             }
-
-
-            System.out.print(pcol + ", "); System.out.println(isPageFull);
-
             if (!isPageFull)
                 pcol++;
-
-
-            System.out.println(s + pos);
-
 
             // put comma at the end of each line
             if (pcol == columnNum) {
@@ -208,21 +198,16 @@ public class HeapFileCreater {
 
     private void saveDate (String s) {
         String[] splitted = s.split("/");
-        byte[] bnDate = new byte[DATE_SIZE];
-        byte[] bdate;
+        byte[] dateWrapper = new byte[DATE_SIZE];
         try {
             // if having DD MM YYYY, do formatting
             if (splitted.length == 3) {
                 for(int i = 0; i < 3; i++) {
-                    if (splitted[i].length() == 0) {
-                        bdate = ByteBuffer.allocate(INT_SIZE).putInt(-1).array();
-                    } else {
-                        int dpart = Integer.parseInt(splitted[i]);
-                        bdate = ByteBuffer.allocate(INT_SIZE).putInt(dpart).array();
-                    }
-                    Copy(bdate, bnDate, i * bdate.length);
+                    int dpart = Integer.parseInt(splitted[i]);
+                    byte[] bdate = ByteBuffer.allocate(INT_SIZE).putInt(dpart).array();
+                    Copy(bdate, dateWrapper, i * bdate.length);
                 }
-                ArrayCopy(bnDate, page);
+                ArrayCopy(dateWrapper, page);
             }
         } catch (Exception e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
