@@ -224,7 +224,7 @@ public class HeapFileCreater {
     }
 
     private void writeEOPmark() {
-        byte[] marker = "{".getBytes();
+        byte[] marker = "}".getBytes();
         ArrayCopy(marker, page);
     }
 
