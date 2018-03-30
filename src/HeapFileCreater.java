@@ -1,5 +1,6 @@
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.util.concurrent.Callable;
 
 public class HeapFileCreater {
     private final int INT_SIZE = 4; // integer must be 4 bytes
@@ -21,7 +22,7 @@ public class HeapFileCreater {
     private int pcol = 0; // store at which column the page reaches the end
     boolean isPageFull = false;
     private int columnNum = 0; // store the number of columns
-    private int countRecord = -1; // record counter skips the header line
+    private int countRecord = 0; // record counter (not counting the header line)
     private int countPage = 1; // page counter
 
     public HeapFileCreater(int pageSize, String fileIn) {
@@ -33,15 +34,6 @@ public class HeapFileCreater {
     public void launch() {
         // count the number of records
         try (BufferedReader br = new BufferedReader(new FileReader(fileIn))) {
-            while ((eachline = br.readLine()) != null)
-                // read one record, so counter + 1
-                countRecord++;
-        }catch (IOException e){
-            System.err.println(e.getClass().getName() + ": " + e.getMessage());
-        }
-
-        // read the source file
-        try (BufferedReader br = new BufferedReader(new FileReader(fileIn))) {
             // skip header line but count header column number
             if ((eachline = br.readLine()) != null) {
                 // split each tab-separated line into token array
@@ -49,7 +41,15 @@ public class HeapFileCreater {
                 // count header line column number
                 columnNum = splited.length;
             }
+            while ((eachline = br.readLine()) != null)
+                // count the record number
+                countRecord++;
+        }catch (IOException e){
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+        }
 
+        // read the source file
+        try (BufferedReader br = new BufferedReader(new FileReader(fileIn))) {
             File file = new File("heap." + Integer.toString(pageSize));
             try (DataOutputStream os = new DataOutputStream(new FileOutputStream(file))) {
                 // if file doesn't exist, then create it
@@ -77,7 +77,9 @@ public class HeapFileCreater {
                     }
 
                     if (isPageFull) {
-                        fillPageWithZero(pos);
+                        // write End Of Page marker
+                        writeEOPmark();
+                        fillPageWithZero();
                         os.write(page);
                         os.flush();
 
@@ -87,7 +89,7 @@ public class HeapFileCreater {
                     }
                 }
                 if (countPage > 1)
-                    fillPageWithZero(pos);
+                    fillPageWithZero();
                 os.write(page);
                 os.flush();
                 os.close();
@@ -104,7 +106,7 @@ public class HeapFileCreater {
     private void saveElement(String s) {
         // this data element is empty
         if (s.length() == 0) {
-            // add FF as the length of this element
+            // add FF as the length of null elements
             byte[] lenStr = {(byte) -1};
             ArrayCopy(lenStr, page);
             if (!isPageFull) {
@@ -152,25 +154,32 @@ public class HeapFileCreater {
     }
 
     private void saveVariableString (String s) {
-        int pointer = 0;
         // get the content in bytes
         byte[] buffer = s.getBytes();
         // write the length using 4 bytes in front of register name string
-        byte[] lenStr = ByteBuffer.allocate(INT_SIZE).putInt(s.length()).array();
-        ArrayCopy(lenStr, page);
-        ArrayCopy(buffer, page);
+        byte[] lenStr = {(byte)s.length()};
+        byte[] wrapper = new byte[lenStr.length + buffer.length];
+        Copy(lenStr, wrapper, 0);
+        Copy(buffer, wrapper, lenStr.length);
+        ArrayCopy(wrapper, page);
     }
 
     private void saveFixedString (String s, int size) {
-        int pointer = 0;
         // get the content in bytes
         byte[] buffer = s.getBytes();
-        // write the length using 4 bytes in front of register name string
-        byte[] lenStr = ByteBuffer.allocate(INT_SIZE).putInt(s.length()).array();
-        byte[] wrapper = new byte[lenStr.length + size];
-        pointer = Copy(lenStr, wrapper, pointer);
-        Copy(buffer, wrapper, pointer);
+        byte[] wrapper = new byte[size];
+        Copy(buffer, wrapper, 0);
         ArrayCopy(wrapper, page);
+
+//        int pointer = 0;
+//        // get the content in bytes
+//        byte[] buffer = s.getBytes();
+//        // write the length using 4 bytes in front of register name string
+//        byte[] lenStr = ByteBuffer.allocate(INT_SIZE).putInt(s.length()).array();
+//        byte[] wrapper = new byte[lenStr.length + size];
+//        pointer = Copy(lenStr, wrapper, pointer);
+//        Copy(buffer, wrapper, pointer);
+//        ArrayCopy(wrapper, page);
     }
 
     private void ArrayCopy (byte[] src, byte[] dest) {
@@ -214,7 +223,12 @@ public class HeapFileCreater {
         }
     }
 
-    private void fillPageWithZero (int pos) {
+    private void writeEOPmark() {
+        byte[] marker = "{".getBytes();
+        ArrayCopy(marker, page);
+    }
+
+    private void fillPageWithZero () {
         byte[] buffer = {(byte)0};
         while (pos + buffer.length <= pageSize) {
             try {

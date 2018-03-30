@@ -10,8 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class MongoJDBC {
-    //private static String csvFile = "BUSINESS_NAMES_201803.csv";
-    private static String csvFile = "asic.csv";
+    private static String csvFile = "BUSINESS_NAMES_201803.csv";
+    //private static String csvFile = "asic.csv";
     private static String[] colHeader = new String[9]; // 9 columns
 
     private static String registerName = "BUSINESS NAMES";
@@ -21,7 +21,6 @@ public class MongoJDBC {
     private static String cvsSpliter = "\\t";
 
     private static void importMongo(MongoCollection businessName) {
-        List<Document> bnNames = new ArrayList<>();
 
         // line counter
         int count = 0;
@@ -43,9 +42,6 @@ public class MongoJDBC {
                         // get the header of each oolumn
                         colHeader[i] = s;
                     } else {
-//                        if (s.length() == 0)
-//                            bnName.put(colHeader[i], "");
-//                        else {
                         // remove repeated information that is consistent
                         switch (i) {
                             // column REGISTER_NAME type 1
@@ -103,19 +99,13 @@ public class MongoJDBC {
                             default:
                                 break;
                         }
-//                            if (i < 8) {
-//                                for (int j = i + 1; j < 9; j++) {
-//                                    bnName.put(colHeader[j], "");
-//                                }
-//                            }
                     }
                 }
-                bnNames.add(bnName);
+                businessName.insertOne(bnName);
             }
         } catch (IOException e){
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
         }
-        businessName.insertMany(bnNames);
         System.out.println("source csv length:       " + count + " lines");
 
 //            FindIterable findIterable = stateOfRegister.find();

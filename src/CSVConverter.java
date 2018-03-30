@@ -4,8 +4,8 @@ import java.io.PrintWriter;
 import java.io.IOException;
 
 public class CSVConverter {
-    //private static String csvFile = "BUSINESS_NAMES_201803.csv";
-    private static String csvFile = "asic.csv";
+    private static String csvFile = "BUSINESS_NAMES_201803.csv";
+    //private static String csvFile = "asic.csv";
     private static String registerName = "BUSINESS NAMES";
     private static String[] status = new String[] {"Registered", "Deregistered"};
     private static String[] states = new String[] {"ACT", "NSW", "NT", "QLD", "SA", "TAS", "VIC", "WA"};
