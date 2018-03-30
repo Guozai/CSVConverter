@@ -5,7 +5,7 @@ import java.io.PrintWriter;
 
 public class CSVtoDerby {
     private static String csvFile = "BUSINESS_NAMES_201803.csv";
-   // private static String csvFile = "asic.csv";
+    //private static String csvFile = "asic.csv";
     private static String registerName = "BUSINESS NAMES";
     private static String[] status = new String[] {"Registered", "Deregistered"};
     private static String[] states = new String[] {"ACT", "NSW", "NT", "QLD", "SA", "TAS", "VIC", "WA"};
@@ -42,78 +42,79 @@ public class CSVtoDerby {
                     String s = "";
                     for (int i = 0; i < splited.length; i++) {
                         s = splited[i];
-                        // change the date format to YYYY-MM-DD
-                        if (s.contains("/")) {
-                            out.print("\"" + dateFormatter(s) + "\"");
-                        } else {
-                            // remove repeated information that is consistent
-                            int id;
-                            switch (s) {
-                                // column REGISTER_NAME type 1
-                                case "BUSINESS NAMES":
-                                    id = 1;
-                                    out.print(id);
-                                    break;
-                                // column BN_STATUS
-                                case "Registered":
-                                    id = 1;
-                                    out.print(id);
-                                    break;
-                                case "Deregistered":
-                                    id = 2;
-                                    out.print(id);
-                                    break;
-                                // column BN_STATE_OF_REG
-                                case "NSW":
-                                    id = 2;
-                                    out.print(id);
-                                    break;
-                                case "VIC":
-                                    id = 7;
-                                    out.print(id);
-                                    break;
-                                case "QLD":
-                                    id = 4;
-                                    out.print(id);
-                                    break;
-                                case "WA":
-                                    id = 8;
-                                    out.print(id);
-                                    break;
-                                case "SA":
-                                    id = 5;
-                                    out.print(id);
-                                    break;
-                                case "ACT":
-                                    id = 1;
-                                    out.print(id);
-                                    break;
-                                case "TAS":
-                                    id = 6;
-                                    out.print(id);
-                                    break;
-                                case "NT":
-                                    id = 3;
-                                    out.print(id);
-                                    break;
-                                default:
-                                    // unique elements are written to file unchanged
-                                    out.print(addDoubleQuotesAround(s));
-                                    break;
+                        if (!splited[1].contains("^")) {
+                            // change the date format to YYYY-MM-DD
+                            if (s.contains("/")) {
+                                out.print("^" + dateFormatter(s) + "^");
+                            } else {
+                                // remove repeated information that is consistent
+                                int id;
+                                switch (s) {
+                                    // column REGISTER_NAME type 1
+                                    case "BUSINESS NAMES":
+                                        id = 1;
+                                        out.print(id);
+                                        break;
+                                    // column BN_STATUS
+                                    case "Registered":
+                                        id = 1;
+                                        out.print(id);
+                                        break;
+                                    case "Deregistered":
+                                        id = 2;
+                                        out.print(id);
+                                        break;
+                                    // column BN_STATE_OF_REG
+                                    case "NSW":
+                                        id = 2;
+                                        out.print(id);
+                                        break;
+                                    case "VIC":
+                                        id = 7;
+                                        out.print(id);
+                                        break;
+                                    case "QLD":
+                                        id = 4;
+                                        out.print(id);
+                                        break;
+                                    case "WA":
+                                        id = 8;
+                                        out.print(id);
+                                        break;
+                                    case "SA":
+                                        id = 5;
+                                        out.print(id);
+                                        break;
+                                    case "ACT":
+                                        id = 1;
+                                        out.print(id);
+                                        break;
+                                    case "TAS":
+                                        id = 6;
+                                        out.print(id);
+                                        break;
+                                    case "NT":
+                                        id = 3;
+                                        out.print(id);
+                                        break;
+                                    default:
+                                        // unique elements are written to file unchanged
+                                        out.print(addDoubleQuotesAround(s));
+                                        break;
+                                }
                             }
-                        }
-                        // put comma behind each token except the last one
-                        if (i < splited.length - 1) {
-                            out.print(",");
-                        }
-                        else {
-                            // must ensure each row have 9 elements (8 commas)
-                            if (splited.length < columnNum) {
-                                for (int j = splited.length; j < columnNum; j++)
-                                    out.print(",");
+                            // put comma behind each token except the last one
+                            if (i < splited.length - 1) {
+                                out.print(",");
+                            } else {
+                                // must ensure each row have 9 elements (8 commas)
+                                if (splited.length < columnNum) {
+                                    for (int j = splited.length; j < columnNum; j++)
+                                        out.print(",");
+                                }
+                                // end of line
+                                out.println();
                             }
-                            // end of line
-                            out.println();
                         }
                     }
                 }
@@ -163,9 +164,10 @@ public class CSVtoDerby {
     }
 
     private static String addDoubleQuotesAround(String s) {
-        // add double quotes around String s if s is not ""
+        // add @ around String s if s is not ""
+        // could not use " because there are data containing " in source file
         if (s.length() > 0)
-            s = "\"" + s + "\"";
+            s = "^" + s + "^";
 
         return s;
     }
