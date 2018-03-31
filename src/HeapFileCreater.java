@@ -10,6 +10,7 @@ public class HeapFileCreater {
     private final int STATE_NUM_SIZE = 20;
     private final int STATE_SIZE = 3;
     private final int ABN_SIZE = 13;
+    private final int RECORD_SIZE = REG_NAME_SIZE + BN_NAME_SIZE + STATUS_SIZE + 3 * DATE_SIZE + STATE_NUM_SIZE + STATE_SIZE + ABN_SIZE;
 
     private String fileIn;
     private String eachline = "";
@@ -62,9 +63,10 @@ public class HeapFileCreater {
 
                     for (int i = pcol; i < splited.length; i++) {
                         String s = splited[i]; // temporary variable to store tokens
-                        if (!isPageFull)
+                        if (pos + RECORD_SIZE < pageSize)
                             saveElement(s);
                         else { // page full
+                            isPageFull = true;
                             break;
                         }
                     }
@@ -95,55 +97,76 @@ public class HeapFileCreater {
     }
 
     private void saveElement(String s) {
-        // this data element is empty
-        if (s.length() == 0) {
-            // add FF as the length of this element
-            byte[] lenStr = {(byte) -1};
-            ArrayCopy(lenStr, page);
-            if (!isPageFull) {
-                if (pcol < columnNum)
-                    pcol++;
-            }
-        } else {
-            switch (pcol) {
-                case 0: // REGISTER_NAME
+        switch (pcol) {
+            case 0: // REGISTER_NAME
+                // this data element is empty
+                if (s.length() == 0)
+                    saveFixedNull(REG_NAME_SIZE);
+                else
                     saveFixedString(s, REG_NAME_SIZE);
-                    break;
-                case 1: // BN_NAME
+                break;
+            case 1: // BN_NAME
+                if (s.length() == 0)
+                    saveFixedNull(BN_NAME_SIZE);
+                else
                     saveFixedString(s, BN_NAME_SIZE);
-                    break;
-                case 2: // BN_STATUS
+                break;
+            case 2: // BN_STATUS
+                if (s.length() == 0)
+                    saveFixedNull(STATUS_SIZE);
+                else
                     saveFixedString(s, STATUS_SIZE);
-                    break;
-                case 3: // BN_REG_DT
-                case 4: // BN_CANCEL_DT
-                case 5: // BN_RENEW_DT
+                break;
+            case 3: // BN_REG_DT
+            case 4: // BN_CANCEL_DT
+            case 5: // BN_RENEW_DT
+                if (s.length() == 0)
+                    saveFixedNull(DATE_SIZE);
+                else
                     saveDate(s);
-                    break;
-                case 6: // BN_STATE_NUM
+                break;
+            case 6: // BN_STATE_NUM
+                if (s.length() == 0)
+                    saveFixedNull(STATE_NUM_SIZE);
+                else
                     saveFixedString(s, STATE_NUM_SIZE);
-                    break;
-                case 7: // BN_STATE_OF_REG
+                break;
+            case 7: // BN_STATE_OF_REG
+                if (s.length() == 0)
+                    saveFixedNull(STATE_SIZE);
+                else
                     saveFixedString(s, STATE_SIZE);
-                    break;
-                case 8: // BN_ABN
+                break;
+            case 8: // BN_ABN
+                if (s.length() == 0)
+                    saveFixedNull(ABN_SIZE);
+                else
                     saveFixedString(s, ABN_SIZE);
-                    break;
-                default:
-                    saveVariableString(s);
-                    break;
-            }
-            if (!isPageFull)
-                pcol++;
-
-            // put comma at the end of each line
-            if (pcol == columnNum) {
-                byte[] lenStr = ",".getBytes();
-                ArrayCopy(lenStr, page);
-                if (!isPageFull)
-                    pcol = 0; // reset pcol at the end of each line
-            }
+                break;
+            default:
+                break;
         }
+        if (!isPageFull)
+            pcol++;
+
+        // put comma at the end of each line
+        if (pcol == columnNum) {
+            byte[] lenStr = ",".getBytes();
+            ArrayCopy(lenStr, page);
+            if (!isPageFull)
+                pcol = 0; // reset pcol at the end of each line
+        }
+    }
+
+    private void saveFixedNull (int size) {
+        // add FF as the length of this element
+        byte[] lenStr = ByteBuffer.allocate(INT_SIZE).putInt(-1).array();
+        try {
+            System.arraycopy(lenStr, 0, page, pos, lenStr.length);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+        }
+        pos += size;
     }
 
     private void saveVariableString (String s) {
