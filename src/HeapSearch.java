@@ -40,7 +40,27 @@ public class HeapSearch {
     }
 
     public void launch() {
-        System.out.println("------------------------------------------");
+        // read the source file
+        try (FileInputStream fis = new FileInputStream(new File(fileName))) {
+            // allocate a channel to read the file
+            FileChannel fc = fis.getChannel();
+            // allocate a buffer, size of pageSize
+            ByteBuffer buffer = ByteBuffer.allocate(INT_SIZE);
+            // read a page of pageSize bytes
+            // -1 means eof.
+            if (fc.read(buffer) != -1) {
+                // flip from filling to emptying
+                buffer.flip();
+                REC_NUM = buffer.getInt();
+            }
+            fc.close();
+            fis.close();
+        } catch (FileNotFoundException e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+        } catch (IOException e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+        }
+        System.out.println("numRec: " + REC_NUM);
 
         // read the source file
         try (FileInputStream fis = new FileInputStream(new File(fileName))) {
@@ -48,32 +68,58 @@ public class HeapSearch {
             FileChannel fc = fis.getChannel();
             // allocate a buffer, size of pageSize
             ByteBuffer buffer = ByteBuffer.allocate(pageSize);
-            // read a page of pageSize bytes
-            // -1 means eof.
-            while (fc.read(buffer) != -1) {
-                // accumulate the number of page after reading a page
-                numPage++;
-                // flip from filling to emptying
-                buffer.flip();
-                // reset pointer
-                pos = 0;
+            while (countRec < numRec) {
+                // read a page of pageSize bytes
+                // -1 means eof.
+                while (fc.read(buffer) != -1) {
+                    // accumulate the number of page after reading a page
+                    numPage++;
+                    // flip from filling to emptying
+                    buffer.flip();
+                    // reset pointer
+                    pos = 0;
 
-                if (numPage == 1) {
-                    REC_NUM = buffer.getInt();
-                    pos += INT_SIZE;
-                }
-                System.out.println("numRec: " + REC_NUM);
-
-
-                while (countRec < numRec) {
-                    while (!getEOPmark(buffer).equals("}")) {
-                        pos++;
-                        System.out.print("pos: " + REC_NUM + ", ");
-                        // countRec';;;;;;;p[++;
+                    // go across numRec (4 bytes)
+                    if (numPage == 1) {
+                        pos += INT_SIZE;
                     }
-                    System.out.println();
-                    System.out.println("Reach end of file");
+
+                    while (!checkEOPmark(buffer)) {
+                        System.out.println("Reach here");
+
+                        // register name
+                        pos += REG_NAME_SIZE;
+                        // business name
+                        pos += LEN_STR_SIZE + getLenStr(buffer);
+                        // business status
+                        pos += STATUS_SIZE;
+                        // BN_REG_DT BN_CANCEL_DT BN_RENEW_DT
+                        for (int j = 0; j < 3; j++)
+                            pos += DATE_SIZE;
+                        // business state number
+                                pos += STATE_NUM_SIZE;
+                                break;
+                            case 7: // state of registration
+                                pos += STATE_SIZE;
+                                break;
+                            case 8: // abn number
+                                pos += ABN_SIZE;
+                            case 9: // comma
+                                pos += COMMA_SIZE;
+                            default:
+                                break;
+                        }
+                        // pcol increment
+                        if (pcol < 10)
+                            pcol++;
+                        else
+                            pcol = 0;
+                    }
+                    // numRec increment
+                    numRec++;
+                    System.out.println("Reach end of page");
                 }
+                System.out.println("Reach end of file");
 
 //                while (countRec < numRec && !isEndPage) {
 //                    if ()
@@ -572,26 +618,41 @@ public class HeapSearch {
         } catch (IOException e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
         }
+
         if (countFound == 0)
             System.out.println("BN_Name does not contain " + queryKey + ".");
         else
-            System.out.println(countFound + " recprds found containing " + queryKey + "!");
+            System.out.println(countFound + " records found containing " + queryKey + "!");
     }
 
-    private boolean getLenStr (ByteBuffer buffer) {
+    private int getLenStr (ByteBuffer buffer) {
         try {
-            lenStr = buffer.getInt();
+            lenStr = (int)buffer.get(pos);
             if (lenStr == -1) // found null element
-                return false;
+                lenStr = 0;
         } catch (NumberFormatException e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
         }
-        return true;
+        return lenStr;
     }
 
-    private boolean checkNotNull (ByteBuffer buffer) {
-        return getLenStr(buffer);
+    private boolean checkEOPmark(ByteBuffer buffer) {
+        byte[] bnName = new byte[LEN_STR_SIZE];
+        bnName[0] = buffer.get(pos);
+        String s = "";
+        try {
+            s = new String(bnName, "US-ASCII");
+        } catch (UnsupportedEncodingException e) {
+            System.err.println(e.getClass().getName() + ": " + e.getMessage());
+        }
+        if (s.equals("}")) {
+            return true;
+        } else {
+            return false;
+        }
     }
+
+    private boolean checkNotNull (ByteBuffer buffer) { return false; }
 
     private String getString(ByteBuffer buffer) {
         int pointer = 0;
@@ -604,18 +665,6 @@ public class HeapSearch {
         }
         try {
             s = new String(bnName, "US-ASCII");
-        } catch (UnsupportedEncodingException e) {
-            System.err.println(e.getClass().getName() + ": " + e.getMessage());
-        }
-        return s;
-    }
-
-    private String getEOPmark(ByteBuffer buffer) {
-        byte[] EOP = new byte[EOP_SIZE];
-        EOP[0] = buffer.get(pos);
-        String s = "";
-        try {
-            s = new String(EOP, "US-ASCII");
         } catch (UnsupportedEncodingException e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
         }

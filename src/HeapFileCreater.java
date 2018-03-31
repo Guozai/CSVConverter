@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 public class HeapFileCreater {
     private final int INT_SIZE = 4; // integer must be 4 bytes
     private final int REG_NAME_SIZE = 20; // REGISTER_NAME caster is limited to 20 bytes
+    private final int BN_NAME_SIZE = 200;
     private final int STATUS_SIZE = 15;
     private final int DATE_SIZE = 12;
     private final int STATE_NUM_SIZE = 20;
@@ -108,6 +109,9 @@ public class HeapFileCreater {
                 case 0: // REGISTER_NAME
                     saveFixedString(s, REG_NAME_SIZE);
                     break;
+                case 1: // BN_NAME
+                    saveFixedString(s, BN_NAME_SIZE);
+                    break;
                 case 2: // BN_STATUS
                     saveFixedString(s, STATUS_SIZE);
                     break;
@@ -125,7 +129,6 @@ public class HeapFileCreater {
                 case 8: // BN_ABN
                     saveFixedString(s, ABN_SIZE);
                     break;
-                case 1: // BN_NAME
                 default:
                     saveVariableString(s);
                     break;
@@ -159,7 +162,8 @@ public class HeapFileCreater {
         // write the length using 4 bytes in front of register name string
         byte[] lenStr = ByteBuffer.allocate(INT_SIZE).putInt(s.length()).array();
         byte[] wrapper = new byte[lenStr.length + size];
-        pointer = Copy(lenStr, wrapper, pointer);
+        Copy(lenStr, wrapper, pointer);
+        pointer += lenStr.length;
         Copy(buffer, wrapper, pointer);
         ArrayCopy(wrapper, page);
     }
@@ -177,14 +181,12 @@ public class HeapFileCreater {
         }
     }
 
-    private int Copy (byte[] src, byte[] dest, int pointer) {
+    private void Copy (byte[] src, byte[] dest, int pointer) {
         try {
             System.arraycopy(src, 0, dest, pointer, src.length);
         } catch (ArrayIndexOutOfBoundsException e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
         }
-        pointer += src.length;
-        return pointer;
     }
 
     private void saveDate (String s) {
