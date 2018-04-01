@@ -1,6 +1,6 @@
 public class dbquery {
-    private static String queryKey = "RPR COMMUNICATIONS";
-    private static int pageSize = 4096;
+    private static String queryKey = "";
+    private static int pageSize = 0;
 
     public static void main(String[] args) {
         long startTime = System.currentTimeMillis(); // timer for calculating program execution time
@@ -12,9 +12,6 @@ public class dbquery {
 
                 HeapSearch query = new HeapSearch(queryKey, pageSize);
                 query.launch();
-
-//                btest test = new btest();
-//                test.launch();
 
             } else {
                 throw new Exception("Need 2 arguments: java dbquery text pagesize");

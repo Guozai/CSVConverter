@@ -17,9 +17,6 @@ public class dbload {
                 HeapCreate heap = new HeapCreate(pageSize, fileName);
                 heap.create();
 
-//                btest test = new btest();
-//                test.launch();
-
             } else {
                 throw new Exception("Need 3 arguments: java dbload -p pagesize datafile");
             }
