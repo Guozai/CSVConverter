@@ -14,8 +14,8 @@ public class dbload {
                     throw new Exception("First argument is not \"-p\"");
                 }
 
-                HeapFileCreater heapFileCreater = new HeapFileCreater(pageSize, fileName);
-                heapFileCreater.launch();
+                HeapCreate heap = new HeapCreate(pageSize, fileName);
+                heap.create();
 
 //                btest test = new btest();
 //                test.launch();

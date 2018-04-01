@@ -86,7 +86,7 @@ public class HeapFileCreater {
                 os.write(page);
                 os.flush();
                 os.close();
-            }catch (IOException e) {
+            } catch (IOException e) {
                 System.err.println(e.getClass().getName() + ": " + e.getMessage());
             }
         } catch (IOException e){
