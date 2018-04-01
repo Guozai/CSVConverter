@@ -52,6 +52,42 @@ public class HeapCreate {
                         for (int i = 0; i < splited.length; i++) {
                             saveElement(splited[i], i);
                         }
+                        for (int i = splited.length; i < COLUMN_NUM; i++) {
+                            switch (i) {
+                                case 0: // REGISTER_NAME
+                                    saveFixedNull(pos);
+                                    pos += REG_NAME_SIZE;
+                                    break;
+                                case 1: // BN_NAME
+                                    saveFixedNull(pos);
+                                    pos += BN_NAME_SIZE;
+                                    break;
+                                case 2: // BN_STATUS
+                                    saveFixedNull(pos);
+                                    pos += STATUS_SIZE;
+                                    break;
+                                case 3: // BN_REG_DT
+                                case 4: // BN_CANCEL_DT
+                                case 5: // BN_RENEW_DT
+                                    saveFixedNull(pos);
+                                    pos += DATE_SIZE;
+                                    break;
+                                case 6: // BN_STATE_NUM
+                                    saveFixedNull(pos);
+                                    pos += STATE_NUM_SIZE;
+                                    break;
+                                case 7: // BN_STATE_OF_REG
+                                    saveFixedNull(pos);
+                                    pos += STATE_SIZE;
+                                    break;
+                                case 8: // BN_ABN
+                                    saveFixedNull(pos);
+                                    pos += ABN_SIZE;
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
                         // add comma at the end of each record
                         byte[] comma = ",".getBytes();
                         System.arraycopy(comma, 0, page, pos, comma.length);
@@ -87,21 +123,21 @@ public class HeapCreate {
                 if (s.length() == 0)
                     saveFixedNull(pos);
                 else
-                    saveFixedString(s, REG_NAME_SIZE, pos);
+                    saveFixedString(s, pos);
                 pos += REG_NAME_SIZE;
                 break;
             case 1: // BN_NAME
                 if (s.length() == 0)
                     saveFixedNull(pos);
                 else
-                    saveFixedString(s, BN_NAME_SIZE, pos);
+                    saveFixedString(s, pos);
                 pos += BN_NAME_SIZE;
                 break;
             case 2: // BN_STATUS
                 if (s.length() == 0)
                     saveFixedNull(pos);
                 else
-                    saveFixedString(s, STATUS_SIZE, pos);
+                    saveFixedString(s, pos);
                 pos += STATUS_SIZE;
                 break;
             case 3: // BN_REG_DT
@@ -117,21 +153,21 @@ public class HeapCreate {
                 if (s.length() == 0)
                     saveFixedNull(pos);
                 else
-                    saveFixedString(s, STATE_NUM_SIZE, pos);
+                    saveFixedString(s, pos);
                 pos += STATE_NUM_SIZE;
                 break;
             case 7: // BN_STATE_OF_REG
                 if (s.length() == 0)
                     saveFixedNull(pos);
                 else
-                    saveFixedString(s, STATE_SIZE, pos);
+                    saveFixedString(s, pos);
                 pos += STATE_SIZE;
                 break;
             case 8: // BN_ABN
                 if (s.length() == 0)
                     saveFixedNull(pos);
                 else
-                    saveFixedString(s, ABN_SIZE, pos);
+                    saveFixedString(s, pos);
                 pos += ABN_SIZE;
                 break;
             default:
@@ -149,14 +185,10 @@ public class HeapCreate {
         }
     }
 
-    private void saveFixedString (String s, int size, int pos) {
+    private void saveFixedString (String s, int pos) {
         // get the content in bytes
         byte[] buffer = s.getBytes();
-        byte[] lenStr = ByteBuffer.allocate(INT_SIZE).putInt(s.length()).array();
-        byte[] wrapper = new byte[lenStr.length + size];
-        System.arraycopy(lenStr, 0, wrapper, 0, lenStr.length);
-        System.arraycopy(buffer, 0, wrapper, INT_SIZE, buffer.length);
-        System.arraycopy(wrapper, 0, page, pos, wrapper.length);
+        System.arraycopy(buffer, 0, page, pos, buffer.length);
     }
 
     private void saveDate (String s, int pos) {

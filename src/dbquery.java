@@ -1,6 +1,6 @@
 public class dbquery {
     private static String queryKey = "RPR COMMUNICATIONS";
-    private static int pageSize = 128;
+    private static int pageSize = 4096;
 
     public static void main(String[] args) {
         long startTime = System.currentTimeMillis(); // timer for calculating program execution time
