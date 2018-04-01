@@ -11,7 +11,7 @@ public class HeapCreate {
     private final int STATE_SIZE = 3;
     private final int ABN_SIZE = 13;
     private final int COMMA_SIZE = 1;
-    private final int RECORD_SIZE = REG_NAME_SIZE + BN_NAME_SIZE + STATUS_SIZE + 3 * DATE_SIZE + STATE_NUM_SIZE + STATE_SIZE + ABN_SIZE + COMMA_SIZE;
+    private final int RECORD_SIZE = REG_NAME_SIZE + INT_SIZE + BN_NAME_SIZE + STATUS_SIZE + 3 * DATE_SIZE + STATE_NUM_SIZE + STATE_SIZE + ABN_SIZE + COMMA_SIZE;
     private final int COLUMN_NUM = 9;
 
     private byte[] page;
@@ -54,7 +54,7 @@ public class HeapCreate {
                         }
                         // add comma at the end of each record
                         byte[] comma = ",".getBytes();
-                        ArrayCopy(comma, page, pos);
+                        System.arraycopy(comma, 0, page, pos, comma.length);
                         pos += COMMA_SIZE;
                     } else {
                         fillPageWithZero(pos);
@@ -152,15 +152,11 @@ public class HeapCreate {
     private void saveFixedString (String s, int size, int pos) {
         // get the content in bytes
         byte[] buffer = s.getBytes();
-        ArrayCopy(buffer, page, pos);
-    }
-
-    private void ArrayCopy (byte[] src, byte[] dest, int pointer) {
-        try {
-            System.arraycopy(src, 0, dest, pointer, src.length);
-        } catch (ArrayIndexOutOfBoundsException e) {
-            System.err.println(e.getClass().getName() + ": " + e.getMessage());
-        }
+        byte[] lenStr = ByteBuffer.allocate(INT_SIZE).putInt(s.length()).array();
+        byte[] wrapper = new byte[lenStr.length + size];
+        System.arraycopy(lenStr, 0, wrapper, 0, lenStr.length);
+        System.arraycopy(buffer, 0, wrapper, INT_SIZE, buffer.length);
+        System.arraycopy(wrapper, 0, page, pos, wrapper.length);
     }
 
     private void saveDate (String s, int pos) {
@@ -172,9 +168,9 @@ public class HeapCreate {
                 for(int i = 0; i < 3; i++) {
                     int dpart = Integer.parseInt(splitted[i]);
                     byte[] bdate = ByteBuffer.allocate(INT_SIZE).putInt(dpart).array();
-                    ArrayCopy(bdate, dateWrapper, i * bdate.length);
+                    System.arraycopy(bdate, 0, dateWrapper, i * bdate.length, bdate.length);
                 }
-                ArrayCopy(dateWrapper, page, pos);
+                System.arraycopy(dateWrapper, 0, page, pos, dateWrapper.length);
             }
         } catch (Exception e) {
             System.err.println(e.getClass().getName() + ": " + e.getMessage());
