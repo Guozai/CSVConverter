@@ -14,8 +14,9 @@ public class HeapSearch {
     private final int STATE_SIZE = 3;
     private final int ABN_SIZE = 13;
     private final int COMMA_SIZE = 1;
-    private final int EOP_SIZE = 1;
-    private final int RECORD_SIZE = REG_NAME_SIZE + BN_NAME_SIZE + STATUS_SIZE + 3 * DATE_SIZE + STATE_NUM_SIZE + STATE_SIZE + ABN_SIZE;
+    private final int RECORD_SIZE = REG_NAME_SIZE + INT_SIZE + BN_NAME_SIZE + STATUS_SIZE + 3 * DATE_SIZE + STATE_NUM_SIZE + STATE_SIZE + ABN_SIZE + COMMA_SIZE;
+    private int NUM_RECORDS_PER_PAGE;
+
     private String queryKey;
     private int pageSize;
     private String fileName;
@@ -37,6 +38,7 @@ public class HeapSearch {
         this.queryKey = queryKey;
         this.pageSize = pageSize;
         fileName = "heap." + Integer.toString(pageSize);
+        NUM_RECORDS_PER_PAGE = Math.floorDiv(pageSize, RECORD_SIZE);
     }
 
     public void launch() {
@@ -52,26 +54,25 @@ public class HeapSearch {
                 buffer.flip();
                 // reset pointer
                 pos = 0;
+                pos += REG_NAME_SIZE;
 
-                for (int i = 0; i < Math.floorDiv(pageSize, RECORD_SIZE + COMMA_SIZE); i++) {
-                    // register name
-                    pos += REG_NAME_SIZE;
+                for (int i = 0; i < NUM_RECORDS_PER_PAGE; i++) {
                     // business name
                     byte[] temp = new byte[BN_NAME_SIZE];
-                    buffer.get(s, pos, BN_NAME_SIZE);
-                    String s = new String(temp, "USA-ASCII");
+//                    buffer.get(temp, pos, BN_NAME_SIZE);
+//                    String s = new String(temp, "US-ASCII");
+//                    System.out.println(s);
                     // go through the rest of columns of the record
-                    pos += BN_NAME_SIZE + STATUS_SIZE + 3 * DATE_SIZE + STATE_NUM_SIZE + STATE_SIZE + ABN_SIZE + COMMA_SIZE;
+                    pos += RECORD_SIZE;
                 }
                 buffer.clear();
+                // numRec increment
+                numRec++;
+                System.out.println("Reach end of page");
             }
-            // numRec increment
-            numRec++;
-            System.out.println("Reach end of page");
-        }
 
-                System.out.println("Reach end of file");
-            }
+            System.out.println("Reach end of file");
+
             fc.close();
             fis.close();
         } catch (FileNotFoundException e) {
